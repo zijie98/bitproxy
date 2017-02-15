@@ -26,11 +26,8 @@ type SSServer struct {
 	pwd   string
 	port  int
 
-	ln *kcp.Listener
-}
-
-func slog(msg ...interface{}) {
-	log.Info("SSServer", msg)
+	ln  *kcp.Listener
+	log *log.Logger
 }
 
 func (this *SSServer) getRequest(client io.Reader) (host string, extra []byte, err error) {
@@ -49,7 +46,7 @@ func (this *SSServer) getRequest(client io.Reader) (host string, extra []byte, e
 	buf := make([]byte, 260)
 	var n int
 	if n, err = client.Read(buf); err != nil {
-		slog("Read request buf err ", err)
+		this.log.Info("Read request buf err ", err)
 		err = errors.New("Read request buf err " + err.Error())
 		return
 	}
@@ -63,7 +60,7 @@ func (this *SSServer) getRequest(client io.Reader) (host string, extra []byte, e
 	case typeDomain:
 		reqLen = int(buf[rawDmLen]) + LenTypeDomainBase
 	default:
-		slog("Raw addr err")
+		this.log.Info("Raw addr err")
 		err = errors.New("Raw addr err")
 		return
 	}
@@ -104,7 +101,7 @@ func (this *SSServer) handle(client io.ReadWriteCloser) {
 
 	session, err := smux.Server(client, smuxConfig)
 	if err != nil {
-		slog("kcp smux.Client error ", err)
+		this.log.Info("kcp smux.Client error ", err)
 		return
 	}
 	defer session.Close()
@@ -112,25 +109,25 @@ func (this *SSServer) handle(client io.ReadWriteCloser) {
 	for {
 		client_stream, err := session.AcceptStream()
 		if err != nil {
-			slog("kcp session.OpenStream error ", err.Error())
+			this.log.Info("kcp session.OpenStream error ", err.Error())
 			return
 		}
 		raw_host_addr, extra, err := this.getRequest(client_stream)
 		if err != nil {
-			slog("Request err ", err)
+			this.log.Info("Request err ", err)
 			return
 		}
 
 		raw_host, err := net.DialTimeout("tcp", raw_host_addr, 5*time.Second)
 		if err != nil {
-			slog("Dial to raw host err ", err, raw_host_addr)
+			this.log.Info("Dial to raw host err ", err, raw_host_addr)
 			return
 		}
 
 		if extra != nil {
 			//slog("Write extra : ", extra)
 			if _, err = raw_host.Write(extra); err != nil {
-				slog("Write extra date err ", err)
+				this.log.Info("Write extra date err ", err)
 				return
 			}
 		}
@@ -150,16 +147,16 @@ func (this *SSServer) Start() error {
 	case CryptSalsa20:
 		block, _ = kcp.NewSalsa20BlockCrypt(pass)
 	default:
-		slog("No suppert ", this.crypt)
+		this.log.Info("No suppert ", this.crypt)
 		return errors.New("SSCLIENT: No suppert " + this.crypt)
 	}
 
 	this.ln, err = kcp.ListenWithOptions(fmt.Sprintf(":%d", this.port), block, 10, 3)
 	if err != nil {
-		slog("kcp.DialWithOptions error", err)
+		this.log.Info("kcp.DialWithOptions error", err)
 		return errors.New("SSCLIENT: kcp.DialWithOptions error " + err.Error())
 	}
-	slog("listen ", this.port)
+	this.log.Info("listen ", this.port)
 
 	for {
 		if conn, err := this.ln.AcceptKCP(); err == nil {
@@ -170,10 +167,10 @@ func (this *SSServer) Start() error {
 			conn.SetACKNoDelay(true)
 			conn.SetKeepAlive(10)
 
-			slog("Accept address:", conn.RemoteAddr())
+			this.log.Info("Accept address:", conn.RemoteAddr())
 			go this.handle(conn)
 		} else {
-			slog("Accept err ", this.port, " ", err)
+			this.log.Info("Accept err ", this.port, " ", err)
 		}
 	}
 
@@ -193,5 +190,6 @@ func NewServer(port int, pwd, crypt string) *SSServer {
 		crypt: crypt,
 		pwd:   pwd,
 		port:  port,
+		log:   log.NewLogger("SSServer"),
 	}
 }

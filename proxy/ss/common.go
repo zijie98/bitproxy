@@ -1,16 +1,14 @@
 package ss
 
-import "time"
-
 const (
 	SALT = "HELLO WORLD, HELLO MOLI"
 
 	CryptXor     = "xor"
 	CryptSalsa20 = "salsa20"
 
-	sockbuf = 4194304
+	//sockbuf = 4194304
 
-	readTimeout = time.Duration(500) * time.Second
+	//readTimeout = time.Duration(500) * time.Second
 )
 
 const (

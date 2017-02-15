@@ -16,21 +16,22 @@ type TcpProxy struct {
 	remote_host string
 	remote_port int
 
-	ln net.Listener
+	ln  net.Listener
+	log *log.Logger
 }
 
 func (this *TcpProxy) Start() error {
 	var err error
 	this.ln, err = net.Listen("tcp", utils.JoinHostPort("", this.local_port))
 	if err != nil {
-		log.Info("TCP PROXY: Can't Listen port: ", this.local_port, " ", err)
+		this.log.Info("Can't Listen port: ", this.local_port, " ", err)
 		return err
 	}
-	log.Info("TCP PROXY: Start tcp proxy.")
+	this.log.Info("Start tcp proxy.")
 	for {
 		conn, err := this.ln.Accept()
 		if err != nil {
-			log.Info("TCP PROXY: Can't Accept: ", err)
+			this.log.Info("Can't Accept: ", err)
 			break
 		}
 		this.serveHandle(conn)
@@ -53,7 +54,7 @@ func (this *TcpProxy) serveHandle(local_conn net.Conn) {
 		DefaultDialTimeout*time.Second,
 	)
 	if err != nil {
-		log.Info("TCP PROXY: Dial remote host fall: ", err)
+		this.log.Info("Dial remote host fall: ", err)
 		return
 	}
 	go utils.Copy(remote_conn, local_conn)
@@ -65,5 +66,6 @@ func NewTcpProxy(local_port int, remote_host string, remote_port int) *TcpProxy 
 		local_port:  local_port,
 		remote_host: remote_host,
 		remote_port: remote_port,
+		log:         log.NewLogger("TCP PROXY"),
 	}
 }

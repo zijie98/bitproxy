@@ -2,8 +2,18 @@ package log
 
 import "fmt"
 
-func Info(prefix string, msg ...interface{}) {
-	fmt.Print(prefix)
+type Logger struct {
+	prefix string
+}
+
+func NewLogger(prefix string) *Logger {
+	return &Logger{
+		prefix: prefix,
+	}
+}
+
+func (this *Logger) Info(msg ...interface{}) {
+	fmt.Print(this.prefix)
 	fmt.Print(" ")
 	fmt.Println(msg...)
 }

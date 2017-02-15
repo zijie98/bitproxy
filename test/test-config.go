@@ -53,13 +53,11 @@ func main() {
 				fmt.Println("========")
 				tcp_cfg := manager.TcpProxyConfig{}
 				utils.FillStruct(item, &tcp_cfg)
-				fmt.Println("---------")
-				fmt.Println(tcp_cfg)
+				fmt.Println("---------is ok ?")
+				fmt.Println(tcp_cfg.LocalPort == 80)
 			}
 		}
 	}
-
-	fmt.Println(handles.TcpProxys)
 
 	if handles.TcpProxys == nil {
 		fmt.Println("is nill")

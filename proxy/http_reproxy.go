@@ -16,6 +16,8 @@ type HttpReproxy struct {
 	local_port  int
 	remote_host string
 	remote_port int
+
+	log *log.Logger
 }
 
 func (this *HttpReproxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,14 +27,14 @@ func (this *HttpReproxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
-	log.Info("HttpReverseProxy: http proxy request : ", r.Host, " ", r.RequestURI)
+	this.log.Info("HttpReverseProxy: http proxy request : ", r.Host, " ", r.RequestURI)
 	proxy.ServeHTTP(w, r)
 }
 
 func (this *HttpReproxy) Start() error {
 	err := http.ListenAndServe(utils.JoinHostPort("", this.local_port), this)
 	if err != nil {
-		log.Info("HttpReverseProxy: ListenAndServe: ", err)
+		this.log.Info("HttpReverseProxy: ListenAndServe: ", err)
 		return err
 	}
 	return nil
@@ -51,5 +53,6 @@ func NewHttpReproxy(local_port int, remote_host string, remote_port int) *HttpRe
 		local_port:  local_port,
 		remote_host: remote_host,
 		remote_port: remote_port,
+		log:         log.NewLogger("HttpReverseProxy"),
 	}
 }

@@ -30,11 +30,8 @@ type SSClient struct {
 
 	server_addr string // 8.8.8.8:1990
 
-	ln net.Listener
-}
-
-func clog(msg ...interface{}) {
-	log.Info("SSClient", msg)
+	ln  net.Listener
+	log *log.Logger
 }
 
 func (this *SSClient) handle(client io.ReadWriter) {
@@ -42,32 +39,32 @@ func (this *SSClient) handle(client io.ReadWriter) {
 	buf := make([]byte, 32) // 32 byte
 	_, err := client.Read(buf)
 	if err != nil {
-		clog("Client online err ", err)
+		this.log.Info("Client online err ", err)
 		return
 	}
 	//clog("1 - ", buf)
 	if buf[0] != socks5Version {
-		clog("Only suppert socks5")
+		this.log.Info("Only suppert socks5")
 		return
 	}
 
 	buf = buf[:0] // reset
 	buf = append(buf, socks5Version, 0)
 	if _, err = client.Write(buf); err != nil {
-		clog("Send msg to client err ", err)
+		this.log.Info("Send msg to client err ", err)
 		return
 	}
 
 	raw_addr, err := this.getRequestRemoteAddr(client)
 	if err != nil {
-		clog("RemoteAddrHandle err ", err, raw_addr)
+		this.log.Info("RemoteAddrHandle err ", err, raw_addr)
 		return
 	}
 
 	buf = buf[:0] // reset
 	buf = append(buf, socks5Version, 0, 0, 0x1, 0, 0, 0, 0, 0, 0)
 	if _, err := client.Write(buf); err != nil {
-		clog("Send established to client err ", err)
+		this.log.Info("Send established to client err ", err)
 		return
 	}
 
@@ -75,7 +72,7 @@ func (this *SSClient) handle(client io.ReadWriter) {
 	// connect to server
 	server_conn, err := this.createServerConn()
 	if err != nil {
-		clog("Connect to server fail ", err)
+		this.log.Info("Connect to server fail ", err)
 		return
 	}
 
@@ -102,7 +99,7 @@ func (this *SSClient) createServerConn() (io.ReadWriteCloser, error) {
 	case CryptSalsa20:
 		block, _ = kcp.NewSalsa20BlockCrypt(pass)
 	default:
-		log.Info("SSCLIENT: No suppert ", this.crypt)
+		this.log.Info("SSCLIENT: No suppert ", this.crypt)
 		return nil, errors.New("SSCLIENT: No suppert " + this.crypt)
 	}
 
@@ -110,7 +107,7 @@ func (this *SSClient) createServerConn() (io.ReadWriteCloser, error) {
 
 	conn, err := kcp.DialWithOptions(this.server_addr, block, 10, 3)
 	if err != nil {
-		log.Info("SSCLIENT: kcp.DialWithOptions error", err)
+		this.log.Info("SSCLIENT: kcp.DialWithOptions error", err)
 		return nil, errors.New("SSCLIENT: kcp.DialWithOptions error " + err.Error())
 	}
 	conn.SetStreamMode(true)
@@ -122,12 +119,12 @@ func (this *SSClient) createServerConn() (io.ReadWriteCloser, error) {
 
 	session, err := smux.Client(conn, smuxConfig)
 	if err != nil {
-		log.Info("SSCLIENT: kcp smux.Client error ", err)
+		this.log.Info("SSCLIENT: kcp smux.Client error ", err)
 		return nil, errors.New("SSCLIENT: kcp smux.Client error " + err.Error())
 	}
 	stream, err := session.OpenStream()
 	if err != nil {
-		log.Info("SSCLIENT: kcp session.OpenStream error ", err.Error())
+		this.log.Info("SSCLIENT: kcp session.OpenStream error ", err.Error())
 		return nil, errors.New("SSCLIENT: kcp session.OpenStream error " + err.Error())
 	}
 	return stream, nil
@@ -147,7 +144,7 @@ func (this *SSClient) getRequestRemoteAddr(client io.ReadWriter) (buf []byte, er
 
 	n, err := client.Read(buf)
 	if err != nil || n < rawType {
-		clog("Read error ", err)
+		this.log.Info("Read error ", err)
 		return nil, err
 	}
 
@@ -160,13 +157,13 @@ func (this *SSClient) getRequestRemoteAddr(client io.ReadWriter) (buf []byte, er
 	case typeDomain:
 		reqLen = int(buf[rawAddr]) + LenTypeDoaminBase
 	default:
-		clog("Raw addr err", &client)
+		this.log.Info("Raw addr err", &client)
 		return nil, errors.New("Raw addr err")
 	}
 
 	if n < reqLen {
 		if _, err := io.ReadFull(client, buf[n:reqLen]); err != nil {
-			clog("ReadFull err..", err)
+			this.log.Info("ReadFull err..", err)
 			return nil, err
 		}
 	}
@@ -178,17 +175,17 @@ func (this *SSClient) Start() error {
 	var err error
 	this.ln, err = net.Listen("tcp", fmt.Sprintf(":%d", this.local_port))
 	if err != nil {
-		clog("Listen err ", err)
+		this.log.Info("Listen err ", err)
 		return err
 	}
-	clog("Listen port", this.local_port)
+	this.log.Info("Listen port", this.local_port)
 	for {
 		conn, err := this.ln.Accept()
 		if err != nil {
-			clog("Accept err ", err)
+			this.log.Info("Accept err ", err)
 			break
 		}
-		clog("Accept ip ", conn.RemoteAddr(), "client ", &conn)
+		this.log.Info("Accept ip ", conn.RemoteAddr(), "client ", &conn)
 		go this.handle(conn)
 	}
 	return nil
@@ -208,5 +205,6 @@ func NewClient(local_port int, server_addr, pwd, crypt string) *SSClient {
 		pwd:         pwd,
 		local_port:  local_port,
 		server_addr: server_addr,
+		log:         log.NewLogger("SSClient"),
 	}
 }

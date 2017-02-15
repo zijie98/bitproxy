@@ -1,10 +1,8 @@
-package manager
+/*
+	各种配置
+*/
 
-type Proxyer interface {
-	Start() error
-	Stop() error
-	LocalPort() int
-}
+package manager
 
 // FTP代理
 
@@ -14,17 +12,11 @@ type Proxyer interface {
 //}
 
 // HTTP 反向代理配置
-type (
-	HttpReproxyConfig struct {
-		LocalPort  int    `json:"local_port"`
-		RemoteHost string `json:"remote_host"`
-		RemotePort int    `json:"remote_port"`
-	}
-	HttpReproxyHandle struct {
-		Config *HttpReproxyConfig
-		Proxy  Proxyer
-	}
-)
+type HttpReproxyConfig struct {
+	LocalPort  int    `json:"local_port"`
+	RemoteHost string `json:"remote_host"`
+	RemotePort int    `json:"remote_port"`
+}
 
 // UDP 代理配置
 //type UdpProxyConfig struct {
@@ -32,43 +24,24 @@ type (
 //}
 
 // TCP 代理配置
-type (
-	TcpProxyConfig struct {
-		LocalPort  int    `json:"local_port"`
-		RemoteHost string `json:"remote_host"`
-		RemotePort int    `json:"remote_port"`
-	}
-	TcpProxyHandle struct {
-		Config *TcpProxyConfig `json:"tcp"`
-		Proxy  Proxyer
-	}
-)
+type TcpProxyConfig struct {
+	LocalPort  int    `json:"local_port"`
+	RemoteHost string `json:"remote_host"`
+	RemotePort int    `json:"remote_port"`
+}
 
 // Shadowsocks 客户端配置
-type (
-	SsClientConfig struct {
-		LocalPort  int    `json:"local_port"`
-		RemoteHost string `json:"remote_host"`
-		RemotePort int    `json:"remote_port"`
-		Password   string `json:"password"`
-		Crypt      string `json:"crypt"`
-	}
-	SsClientHandle struct {
-		Config *SsClientConfig
-		Proxy  Proxyer
-	}
-)
+type SsClientConfig struct {
+	LocalPort  int    `json:"local_port"`
+	RemoteHost string `json:"remote_host"`
+	RemotePort int    `json:"remote_port"`
+	Password   string `json:"password"`
+	Crypt      string `json:"crypt"`
+}
 
 // Shadowsocks 服务器端配置
-type (
-	SsServerConfig struct {
-		Crypt     string `json:"crypt"`
-		Password  string `json:"password"`
-		LocalPort int    `json:"port"`
-	}
-
-	SsServerHandle struct {
-		Config *SsServerConfig
-		Proxy  Proxyer
-	}
-)
+type SsServerConfig struct {
+	Crypt     string `json:"crypt"`
+	Password  string `json:"password"`
+	LocalPort int    `json:"port"`
+}

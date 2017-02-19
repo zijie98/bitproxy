@@ -11,13 +11,13 @@ var man *manager.Manager = manager.New(config_path)
 var log *logger.Logger = logger.NewLogger("Main")
 
 func main() {
-	err := man.ParseConfig(false)
+	err := man.ParseConfig()
 	if err != nil {
 		log.Info(err.Error())
 		return
 	}
 
-	//man.RunAll()
+	man.RunAll()
 
 	select {}
 }

@@ -1,6 +1,6 @@
 /*
 	m = proxy.NewManager("xx.config")
-	m.ParseConfig(true)
+	m.ParseConfig()
 	m.RunAll()
 
 */
@@ -36,9 +36,8 @@ func New(config_path string) (man *Manager) {
 }
 
 //	将配置文件格式化到配置
-//		run_now = 是否读取配置后马上运行
 //
-func (this *Manager) ParseConfig(run_now bool) (err error) {
+func (this *Manager) ParseConfig() (err error) {
 	file, err := os.Open(this.config_file_path)
 	if err != nil {
 		return err
@@ -81,9 +80,6 @@ func (this *Manager) ParseConfig(run_now bool) (err error) {
 				this.handles.HttpReproxys[cfg.LocalPort] = NewHttpReproxy(&cfg)
 			}
 		}
-	}
-	if run_now {
-		this.RunAll()
 	}
 	return nil
 }

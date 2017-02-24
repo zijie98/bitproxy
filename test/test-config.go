@@ -1,12 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"rkproxy/manager"
-
 	//"reflect"
-	"rkproxy/utils"
 )
 
 func main() {
@@ -14,52 +11,36 @@ func main() {
 		{
 			"tcp": [
 				{
-					"local_port": 80,
-					"remote_host": "127.0.01"
+					"local_port": 8080,
+					"remote_host": "baidu.com",
+					"remote_port": 80
 				}
 			],
-			"ss-client":
+			"ss-client":[
 				{
-					"local_port": 80,
+					"local_port": 8081,
 					"remote_host": "127.0.0.1",
-					"password": "123"
-				},
-			"ss-server":
-			[]
+					"remote_port": 8082,
+					"password": "123",
+					"crypt": "XOR"
+				}
+			],
+			"ss-server": [
+				{
+					"server_port": 8082,
+					"password": "123",
+					"crypt": "XOR"
+				}
+			]
 		}
 	`)
-	handles := manager.Handles{
-		HttpReproxys: make(map[int]*manager.HttpReproxyHandle),
-		TcpProxys:    make(map[int]*manager.TcpProxyHandle),
-		SsServers:    make(map[int]*manager.SsServerHandle),
+	man := manager.NewByConfigContent(config)
+	err := man.ParseConfig()
+	if err != nil {
+		fmt.Println("ParseConfig .. ", err)
+		return
 	}
-
-	var hash_config map[string][]map[string]interface{}
-
-	err := json.Unmarshal(config, &hash_config)
-	fmt.Println(err)
-
-	fmt.Println(hash_config)
-
-	for k, v := range hash_config {
-		switch k {
-		case "tcp":
-			fmt.Println(v)
-			fmt.Println("-=====--")
-			for _, item := range v {
-
-				//v[i]["local_port"]
-				fmt.Println(item)
-				fmt.Println("========")
-				tcp_cfg := manager.TcpProxyConfig{}
-				utils.FillStruct(item, &tcp_cfg)
-				fmt.Println("---------is ok ?")
-				fmt.Println(tcp_cfg.LocalPort == 80)
-			}
-		}
-	}
-
-	if handles.TcpProxys == nil {
-		fmt.Println("is nill")
-	}
+	handles := man.GetHandles()
+	port := handles[8080].ListeningPort()
+	fmt.Println(port == 8080)
 }

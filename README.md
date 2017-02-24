@@ -19,6 +19,36 @@ rkproxy是一个 Shadowsocks/TCP/HTTPReproxy 代理软件
 
 - 简单易用的HTTP反向代理
 
+### 使用教程
+
+程序目录下新建config.json文件
+```json
+{
+    "tcp": [
+        {
+            "local_port": 8080,
+            "remote_host": "baidu.com",
+            "remote_port": 80
+        }
+    ],
+    "ss-client":[
+        {
+            "local_port": 8081,
+            "remote_host": "127.0.0.1",
+            "remote_port": 8082,
+            "password": "123",
+            "crypt": "XOR"
+        }
+    ],
+    "ss-server": [
+        {
+            "server_port": 8082,
+            "password": "123",
+            "crypt": "XOR"
+        }
+    ]
+}
+```
 
 ### 待续
 

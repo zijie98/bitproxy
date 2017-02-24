@@ -43,5 +43,5 @@ type SsClientConfig struct {
 type SsServerConfig struct {
 	Crypt     string `json:"crypt"`
 	Password  string `json:"password"`
-	LocalPort int    `json:"port"`
+	LocalPort int    `json:"server_port"`
 }

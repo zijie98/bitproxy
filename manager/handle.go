@@ -1,5 +1,5 @@
 /*
-	定义Handle
+	代理程序句柄
 */
 package manager
 
@@ -9,48 +9,70 @@ import (
 	"rkproxy/utils"
 )
 
+//	代理程序的接口
+//
 type Proxyer interface {
 	Start() error
 	Stop() error
 	LocalPort() int
 }
 
-type HttpReproxyHandle struct {
-	Config *HttpReproxyConfig
+//	句柄接口
+//
+type ProxyHandler interface {
+	ListeningPort() int
+	Start() error
+	Stop() error
+	GetConfig() interface{}
+}
+
+//	句柄
+//
+type Handle struct {
+	Config interface{}
 	Proxy  Proxyer
+}
+
+func (this *Handle) ListeningPort() int {
+	return this.Proxy.LocalPort()
+}
+func (this *Handle) Start() error {
+	return this.Proxy.Start()
+}
+func (this *Handle) Stop() error {
+	return this.Proxy.Stop()
+}
+func (this *Handle) GetConfig() interface{} {
+	return this.Config
+}
+
+type HttpReproxyHandle struct {
+	Handle
 }
 
 type TcpProxyHandle struct {
-	Config *TcpProxyConfig
-	Proxy  Proxyer
+	Handle
 }
 
 type SsClientHandle struct {
-	Config *SsClientConfig
-	Proxy  Proxyer
+	Handle
 }
 
 type SsServerHandle struct {
-	Config *SsServerConfig
-	Proxy  Proxyer
+	Handle
 }
 
-type Handles struct {
-	HttpReproxys map[int]*HttpReproxyHandle `json:"http-reproxy"`
-	TcpProxys    map[int]*TcpProxyHandle    `json:"tcp"`
-	SsClient     *SsClientHandle            `json:"ss-client"`
-	SsServers    map[int]*SsServerHandle    `json:"ss-server"`
-}
-
-func NewTcpProxy(config *TcpProxyConfig) *TcpProxyHandle {
+func NewTcpProxy(config *TcpProxyConfig) ProxyHandler {
 	proxy := proxy.NewTcpProxy(
 		config.LocalPort,
 		config.RemoteHost,
 		config.RemotePort,
 	)
 	handle := &TcpProxyHandle{
-		Config: config,
-		Proxy:  proxy,
+		Handle: Handle{
+			Config: config,
+			Proxy:  proxy,
+		},
 	}
 	return handle
 }
@@ -63,8 +85,10 @@ func NewSsClient(config *SsClientConfig) *SsClientHandle {
 		config.Crypt,
 	)
 	handle := &SsClientHandle{
-		Config: config,
-		Proxy:  proxy,
+		Handle: Handle{
+			Config: config,
+			Proxy:  proxy,
+		},
 	}
 	return handle
 }
@@ -76,8 +100,10 @@ func NewSsServer(config *SsServerConfig) *SsServerHandle {
 		config.Crypt,
 	)
 	handle := &SsServerHandle{
-		Config: config,
-		Proxy:  proxy,
+		Handle: Handle{
+			Config: config,
+			Proxy:  proxy,
+		},
 	}
 	return handle
 }
@@ -89,8 +115,10 @@ func NewHttpReproxy(config *HttpReproxyConfig) *HttpReproxyHandle {
 		config.RemotePort,
 	)
 	handle := &HttpReproxyHandle{
-		Config: config,
-		Proxy:  proxy,
+		Handle: Handle{
+			Config: config,
+			Proxy:  proxy,
+		},
 	}
 	return handle
 }

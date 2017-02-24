@@ -14,6 +14,6 @@ func NewLogger(prefix string) *Logger {
 
 func (this *Logger) Info(msg ...interface{}) {
 	fmt.Print(this.prefix)
-	fmt.Print(" ")
+	fmt.Print(" - ")
 	fmt.Println(msg...)
 }

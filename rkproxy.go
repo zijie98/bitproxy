@@ -1,3 +1,8 @@
+/*
+	By moli molisoft@qq.com
+	Blog huoxr.com
+
+*/
 package main
 
 import (

@@ -14,10 +14,10 @@ const (
 )
 
 type TcpProxy struct {
-	local_port  int
+	local_port  uint
 	local_net   ss.NetProtocol
 	remote_host string
-	remote_port int
+	remote_port uint
 
 	ln  net.Listener
 	log *log.Logger
@@ -49,7 +49,7 @@ func (this *TcpProxy) Stop() error {
 	return this.ln.Close()
 }
 
-func (this *TcpProxy) LocalPort() int {
+func (this *TcpProxy) LocalPort() uint {
 	return this.local_port
 }
 
@@ -67,7 +67,7 @@ func (this *TcpProxy) serveHandle(local_conn net.Conn) {
 	utils.Copy(local_conn, remote_conn)
 }
 
-func NewTcpProxy(local_net ss.NetProtocol, local_port int, remote_host string, remote_port int) *TcpProxy {
+func NewTcpProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint) *TcpProxy {
 	return &TcpProxy{
 		local_net:   local_net,
 		local_port:  local_port,

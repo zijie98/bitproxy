@@ -2,17 +2,20 @@ package proxy
 
 import (
 	"net"
-	"rkproxy/log"
-	"rkproxy/utils"
 	"time"
+
+	"rkproxy/log"
+	"rkproxy/proxy/ss"
+	"rkproxy/utils"
 )
 
 const (
-	DefaultDialTimeout = 3
+	DefaultDialTimeout = 5
 )
 
 type TcpProxy struct {
 	local_port  int
+	local_net   ss.NetProtocol
 	remote_host string
 	remote_port int
 
@@ -22,12 +25,12 @@ type TcpProxy struct {
 
 func (this *TcpProxy) Start() error {
 	var err error
-	this.ln, err = net.Listen("tcp", utils.JoinHostPort("", this.local_port))
+	this.ln, err = net.Listen(string(this.local_net), utils.JoinHostPort("", this.local_port))
 	if err != nil {
 		this.log.Info("Can't Listen port: ", this.local_port, " ", err)
 		return err
 	}
-	this.log.Info("Start tcp proxy.")
+	this.log.Info("Start tcp/udp proxy.")
 	for {
 		conn, err := this.ln.Accept()
 		if err != nil {
@@ -52,7 +55,7 @@ func (this *TcpProxy) LocalPort() int {
 
 func (this *TcpProxy) serveHandle(local_conn net.Conn) {
 	remote_conn, err := net.DialTimeout(
-		"tcp",
+		string(this.local_net),
 		utils.JoinHostPort(this.remote_host, this.remote_port),
 		DefaultDialTimeout*time.Second,
 	)
@@ -64,11 +67,12 @@ func (this *TcpProxy) serveHandle(local_conn net.Conn) {
 	utils.Copy(local_conn, remote_conn)
 }
 
-func NewTcpProxy(local_port int, remote_host string, remote_port int) *TcpProxy {
+func NewTcpProxy(local_net ss.NetProtocol, local_port int, remote_host string, remote_port int) *TcpProxy {
 	return &TcpProxy{
+		local_net:   local_net,
 		local_port:  local_port,
 		remote_host: remote_host,
 		remote_port: remote_port,
-		log:         log.NewLogger("TCP PROXY"),
+		log:         log.NewLogger("TCP/UDP PROXY"),
 	}
 }

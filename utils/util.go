@@ -1,13 +1,13 @@
 package utils
 
 import (
+	"fmt"
 	"net"
 	"reflect"
-	"strconv"
 )
 
-func JoinHostPort(host string, port int) string {
-	return net.JoinHostPort(host, strconv.Itoa(port))
+func JoinHostPort(host string, port uint) string {
+	return net.JoinHostPort(host, fmt.Sprintf("%d", port))
 }
 
 //	map初始化struct

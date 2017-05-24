@@ -87,7 +87,7 @@ func (this *Manager) ParseConfig() (err error) {
 			for _, val := range v {
 				cfg := StreamProxyConfig{}
 				utils.FillStruct(val, &cfg)
-				this.CreateTcpProxy(&cfg)
+				this.CreateStreamProxy(&cfg)
 			}
 		case "ss-client":
 			for _, val := range v {
@@ -165,7 +165,7 @@ func (this *Manager) RunAll() {
 
 //	创建Tcp代理
 //
-func (this *Manager) CreateTcpProxy(config *StreamProxyConfig) ProxyHandler {
+func (this *Manager) CreateStreamProxy(config *StreamProxyConfig) ProxyHandler {
 	handle := NewStreamProxy(config)
 	this.handles[config.LocalPort] = handle
 	return handle

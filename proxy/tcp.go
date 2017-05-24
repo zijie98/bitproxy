@@ -34,7 +34,7 @@ func (this *TcpProxy) Start() error {
 			this.log.Info("Can't Accept: ", err)
 			break
 		}
-		this.serveHandle(conn)
+		go this.serveHandle(conn)
 	}
 	return nil
 }
@@ -61,7 +61,7 @@ func (this *TcpProxy) serveHandle(local_conn net.Conn) {
 		return
 	}
 	go utils.Copy(remote_conn, local_conn)
-	go utils.Copy(local_conn, remote_conn)
+	utils.Copy(local_conn, remote_conn)
 }
 
 func NewTcpProxy(local_port int, remote_host string, remote_port int) *TcpProxy {

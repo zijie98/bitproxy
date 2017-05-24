@@ -22,7 +22,7 @@ const (
 	Encrypt
 )
 const (
-	CryptNOT      = "xor"
+	CryptNOT      = "not"
 	CryptSalsa20  = "salsa20"
 	CryptChacha20 = "chacha20"
 	CryptRc4md5   = "rc4md5"

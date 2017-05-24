@@ -24,7 +24,7 @@ import (
 type SSServer struct {
 	crypt       string
 	pwd         string
-	port        int
+	port        uint
 	channel_net NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
 	ln          net.Listener
 	log         *log.Logger
@@ -184,11 +184,11 @@ func (this *SSServer) Stop() error {
 	return this.ln.Close()
 }
 
-func (this *SSServer) LocalPort() int {
+func (this *SSServer) LocalPort() uint {
 	return this.port
 }
 
-func NewServer(channel_net NetProtocol, port int, pwd, crypt string) *SSServer {
+func NewServer(channel_net NetProtocol, port uint, pwd, crypt string) *SSServer {
 	return &SSServer{
 		crypt:       crypt,
 		pwd:         pwd,

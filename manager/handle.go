@@ -14,13 +14,13 @@ import (
 type Proxyer interface {
 	Start() error
 	Stop() error
-	LocalPort() int
+	LocalPort() uint
 }
 
 //	句柄接口
 //
 type ProxyHandler interface {
-	ListeningPort() int
+	ListeningPort() uint
 	Start() error
 	Stop() error
 	GetConfig() interface{}
@@ -33,7 +33,7 @@ type Handle struct {
 	Proxy  Proxyer
 }
 
-func (this *Handle) ListeningPort() int {
+func (this *Handle) ListeningPort() uint {
 	return this.Proxy.LocalPort()
 }
 func (this *Handle) Start() error {
@@ -50,7 +50,7 @@ type HttpReproxyHandle struct {
 	Handle
 }
 
-type TcpProxyHandle struct {
+type StreamProxyHandle struct {
 	Handle
 }
 
@@ -62,39 +62,43 @@ type SsServerHandle struct {
 	Handle
 }
 
-func NewTcpProxy(config *TcpProxyConfig) ProxyHandler {
-	proxy := proxy.NewTcpProxy(
+func NewStreamProxy(config *StreamProxyConfig) *StreamProxyHandle {
+	pxy := proxy.NewStremProxy(
+		ss.NetProtocol(config.LocalNet),
 		config.LocalPort,
 		config.RemoteHost,
 		config.RemotePort,
 	)
-	handle := &TcpProxyHandle{
+	handle := &StreamProxyHandle{
 		Handle: Handle{
 			Config: config,
-			Proxy:  proxy,
+			Proxy:  pxy,
 		},
 	}
 	return handle
 }
 
 func NewSsClient(config *SsClientConfig) *SsClientHandle {
-	proxy := ss.NewClient(
+	pxy := ss.NewClient(
+		ss.NetProtocol(config.LocalNet),
 		config.LocalPort,
-		utils.JoinHostPort(config.RemoteHost, config.RemotePort),
+		utils.JoinHostPort(config.ServerHost, config.ServerPort),
+		ss.NetProtocol(config.ChannelNet),
 		config.Password,
 		config.Crypt,
 	)
 	handle := &SsClientHandle{
 		Handle: Handle{
 			Config: config,
-			Proxy:  proxy,
+			Proxy:  pxy,
 		},
 	}
 	return handle
 }
 
 func NewSsServer(config *SsServerConfig) *SsServerHandle {
-	proxy := ss.NewServer(
+	pxy := ss.NewServer(
+		ss.NetProtocol(config.ChannelNet),
 		config.LocalPort,
 		config.Password,
 		config.Crypt,
@@ -102,14 +106,14 @@ func NewSsServer(config *SsServerConfig) *SsServerHandle {
 	handle := &SsServerHandle{
 		Handle: Handle{
 			Config: config,
-			Proxy:  proxy,
+			Proxy:  pxy,
 		},
 	}
 	return handle
 }
 
 func NewHttpReproxy(config *HttpReproxyConfig) *HttpReproxyHandle {
-	proxy := proxy.NewHttpReproxy(
+	pxy := proxy.NewHttpReproxy(
 		config.LocalPort,
 		config.RemoteHost,
 		config.RemotePort,
@@ -117,7 +121,7 @@ func NewHttpReproxy(config *HttpReproxyConfig) *HttpReproxyHandle {
 	handle := &HttpReproxyHandle{
 		Handle: Handle{
 			Config: config,
-			Proxy:  proxy,
+			Proxy:  pxy,
 		},
 	}
 	return handle

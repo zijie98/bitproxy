@@ -19,7 +19,7 @@ import (
 )
 
 type Manager struct {
-	handles          map[int]ProxyHandler
+	handles          map[uint]ProxyHandler
 	config_file_path string
 	config_content   []byte
 
@@ -29,7 +29,7 @@ type Manager struct {
 func New(config_path string) (man *Manager) {
 	man = &Manager{
 		config_file_path: config_path,
-		handles:          make(map[int]ProxyHandler),
+		handles:          make(map[uint]ProxyHandler),
 		log:              log.NewLogger("Manager"),
 	}
 	man.readConfigByFilePath()
@@ -39,7 +39,7 @@ func New(config_path string) (man *Manager) {
 func NewByConfigContent(content []byte) (man *Manager) {
 	man = &Manager{
 		config_content: content,
-		handles:        make(map[int]ProxyHandler),
+		handles:        make(map[uint]ProxyHandler),
 		log:            log.NewLogger("Manager"),
 	}
 	return man
@@ -63,7 +63,7 @@ func (this *Manager) readConfigByFilePath() (err error) {
 	return nil
 }
 
-func (this *Manager) GetHandles() map[int]ProxyHandler {
+func (this *Manager) GetHandles() map[uint]ProxyHandler {
 	return this.handles
 }
 
@@ -85,7 +85,7 @@ func (this *Manager) ParseConfig() (err error) {
 		switch k {
 		case "tcp":
 			for _, val := range v {
-				cfg := TcpProxyConfig{}
+				cfg := StreamProxyConfig{}
 				utils.FillStruct(val, &cfg)
 				this.CreateTcpProxy(&cfg)
 			}
@@ -165,8 +165,8 @@ func (this *Manager) RunAll() {
 
 //	创建Tcp代理
 //
-func (this *Manager) CreateTcpProxy(config *TcpProxyConfig) ProxyHandler {
-	handle := NewTcpProxy(config)
+func (this *Manager) CreateTcpProxy(config *StreamProxyConfig) ProxyHandler {
+	handle := NewStreamProxy(config)
 	this.handles[config.LocalPort] = handle
 	return handle
 }

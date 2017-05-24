@@ -13,9 +13,9 @@ import (
 )
 
 type HttpReproxy struct {
-	local_port  int
+	local_port  uint
 	remote_host string
-	remote_port int
+	remote_port uint
 
 	log *log.Logger
 }
@@ -44,11 +44,11 @@ func (this *HttpReproxy) Stop() error {
 	return nil
 }
 
-func (this *HttpReproxy) LocalPort() int {
+func (this *HttpReproxy) LocalPort() uint {
 	return this.local_port
 }
 
-func NewHttpReproxy(local_port int, remote_host string, remote_port int) *HttpReproxy {
+func NewHttpReproxy(local_port uint, remote_host string, remote_port uint) *HttpReproxy {
 	return &HttpReproxy{
 		local_port:  local_port,
 		remote_host: remote_host,

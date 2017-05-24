@@ -25,7 +25,7 @@ import (
 type SSClient struct {
 	crypt       string
 	pwd         string
-	local_port  int
+	local_port  uint
 	local_net   NetProtocol // tcp/udp， 浏览器 -> ss客户端 之间的通信方式
 	channel_net NetProtocol // tcp/udp/kcp， ss客户端 -> ss服务器 之间的通信方式
 	server_addr string      // 8.8.8.8:1990
@@ -179,11 +179,11 @@ func (this *SSClient) Stop() error {
 	return this.ln.Close()
 }
 
-func (this *SSClient) LocalPort() int {
+func (this *SSClient) LocalPort() uint {
 	return this.local_port
 }
 
-func NewClient(local_net NetProtocol, local_port int, server_addr string, channel_net NetProtocol, pwd, crypt string) *SSClient {
+func NewClient(local_net NetProtocol, local_port uint, server_addr string, channel_net NetProtocol, pwd, crypt string) *SSClient {
 	return &SSClient{
 		crypt:       crypt,
 		pwd:         pwd,

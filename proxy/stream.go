@@ -70,7 +70,7 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 	utils.Copy(local_conn, remote_conn)
 }
 
-func NewStremProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint) *StreamProxy {
+func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint) *StreamProxy {
 	return &StreamProxy{
 		local_net:   local_net,
 		local_port:  local_port,

@@ -83,7 +83,7 @@ func (this *Manager) ParseConfig() (err error) {
 
 	for k, v := range temp {
 		switch k {
-		case "tcp":
+		case "stream":
 			for _, val := range v {
 				cfg := StreamProxyConfig{}
 				utils.FillStruct(val, &cfg)

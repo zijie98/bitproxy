@@ -63,7 +63,7 @@ type SsServerHandle struct {
 }
 
 func NewStreamProxy(config *StreamProxyConfig) *StreamProxyHandle {
-	pxy := proxy.NewStremProxy(
+	pxy := proxy.NewStreamProxy(
 		ss.NetProtocol(config.LocalNet),
 		config.LocalPort,
 		config.RemoteHost,

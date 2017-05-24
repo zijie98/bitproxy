@@ -1,18 +1,27 @@
 package main
 
 import (
+	"crypto/rc4"
+	"crypto/sha1"
 	"fmt"
-	//"unsafe"
+	"golang.org/x/crypto/pbkdf2"
 )
 
-type AA struct {
-	aa map[int]int
-}
-
 func main() {
-	a := AA{}
-	a.aa = make(map[int]int)
-	a.aa[1] = 1
-	a.aa[2] = 2
-	fmt.Println(a.aa)
+	pass := pbkdf2.Key([]byte("password"), []byte("HELLO"), 4096, 32, sha1.New)
+	fmt.Printf("%x\n", pass)
+
+	key := []byte("key")
+	src := []byte("hello")
+	des := make([]byte, len(src))
+
+	fmt.Println(src)
+
+	c, _ := rc4.NewCipher(key)
+	c.XORKeyStream(des, src)
+	fmt.Println(des)
+
+	c, _ = rc4.NewCipher(key)
+	c.XORKeyStream(src, des)
+	fmt.Println(src)
 }

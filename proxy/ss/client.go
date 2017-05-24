@@ -10,32 +10,30 @@
 package ss
 
 import (
-	kcp "github.com/xtaci/kcp-go"
-	//
-	"crypto/sha1"
 	"fmt"
-	"github.com/kataras/go-errors"
-	"github.com/xtaci/smux"
-	"golang.org/x/crypto/pbkdf2"
 	"io"
 	"net"
+
+	"github.com/kataras/go-errors"
+	"github.com/xtaci/kcp-go"
+	//"github.com/xtaci/smux"
+
 	"rkproxy/log"
 	"rkproxy/utils"
 )
 
 type SSClient struct {
-	crypt      string
-	pwd        string
-	local_port int
-
-	server_addr string // 8.8.8.8:1990
-
-	ln  net.Listener
-	log *log.Logger
+	crypt       string
+	pwd         string
+	local_port  int
+	local_net   NetProtocol // tcp/udp， 浏览器 -> ss客户端 之间的通信方式
+	channel_net NetProtocol // tcp/udp/kcp， ss客户端 -> ss服务器 之间的通信方式
+	server_addr string      // 8.8.8.8:1990
+	ln          net.Listener
+	log         *log.Logger
 }
 
 func (this *SSClient) handle(client io.ReadWriter) {
-
 	buf := make([]byte, 32) // 32 byte
 	_, err := client.Read(buf)
 	if err != nil {
@@ -43,13 +41,13 @@ func (this *SSClient) handle(client io.ReadWriter) {
 		return
 	}
 	//clog("1 - ", buf)
-	if buf[0] != socks5Version {
+	if buf[0] != SOCKS5_VERSION {
 		this.log.Info("Only suppert socks5")
 		return
 	}
 
 	buf = buf[:0] // reset
-	buf = append(buf, socks5Version, 0)
+	buf = append(buf, SOCKS5_VERSION, 0)
 	if _, err = client.Write(buf); err != nil {
 		this.log.Info("Send msg to client err ", err)
 		return
@@ -62,122 +60,105 @@ func (this *SSClient) handle(client io.ReadWriter) {
 	}
 
 	buf = buf[:0] // reset
-	buf = append(buf, socks5Version, 0, 0, 0x1, 0, 0, 0, 0, 0, 0)
+	buf = append(buf, SOCKS5_VERSION, 0, 0, 0x1, 0, 0, 0, 0, 0, 0)
 	if _, err := client.Write(buf); err != nil {
 		this.log.Info("Send established to client err ", err)
 		return
 	}
 
-	//clog("3 - ", raw_addr)
 	// connect to server
-	server_conn, err := this.createServerConn()
+	server_conn, err := this.getServerConn()
 	if err != nil {
 		this.log.Info("Connect to server fail ", err)
 		return
 	}
 
+	server, err := NewCryptConn(server_conn, this.pwd, this.crypt)
+	if err != nil {
+		this.log.Info("NewCryptConn err ", err)
+		return
+	}
+
 	// ss协议中，将把浏览器的请求发给服务器
-	server_conn.Write(raw_addr)
+	server.Write(raw_addr)
 
-	//server_conn , err := net.Dial("tcp", this.host(raw_addr))
-
-	go utils.Copy(client, server_conn)
-	utils.Copy(server_conn, client)
-	//go io.Copy(client, server_conn)
-	//io.Copy(server_conn, client)
+	go utils.Copy(client, server)
+	utils.Copy(server, client)
 }
 
-// 创建Server连接
-func (this *SSClient) createServerConn() (io.ReadWriteCloser, error) {
+func (this *SSClient) getServerConn() (net.Conn, error) {
+	if this.channel_net == UDP_PROTOCOL {
+		return net.Dial("udp", this.server_addr)
 
-	pass := pbkdf2.Key([]byte(this.pwd), []byte(SALT), 4096, 32, sha1.New)
-	var block kcp.BlockCrypt
+	} else if this.channel_net == TCP_PROTOCOL {
+		return net.Dial("tcp", this.server_addr)
 
-	switch this.crypt {
-	case CryptXor:
-		block, _ = kcp.NewSimpleXORBlockCrypt(pass)
-	case CryptSalsa20:
-		block, _ = kcp.NewSalsa20BlockCrypt(pass)
-	default:
-		this.log.Info("SSCLIENT: No suppert ", this.crypt)
-		return nil, errors.New("SSCLIENT: No suppert " + this.crypt)
+	} else if this.channel_net == KCP_PROTOCOL {
+		conn, err := kcp.DialWithOptions(this.server_addr, nil, 10, 3)
+		if err != nil {
+			this.log.Info("SSCLIENT: kcp.DialWithOptions error", err)
+			return nil, errors.New("SSCLIENT: kcp.DialWithOptions error " + err.Error())
+		}
+		conn.SetStreamMode(true)
+		conn.SetNoDelay(1, 20, 1, 0)
+		conn.SetMtu(1350)
+		conn.SetWindowSize(1024, 1024)
+		conn.SetACKNoDelay(true)
+		conn.SetKeepAlive(10)
+		return conn, nil
+	} else {
+		return nil, errors.New("Not found protocol: " + string(this.channel_net) + "?")
 	}
-
-	smuxConfig := smux.DefaultConfig()
-
-	conn, err := kcp.DialWithOptions(this.server_addr, block, 10, 3)
-	if err != nil {
-		this.log.Info("SSCLIENT: kcp.DialWithOptions error", err)
-		return nil, errors.New("SSCLIENT: kcp.DialWithOptions error " + err.Error())
-	}
-	conn.SetStreamMode(true)
-	conn.SetNoDelay(1, 20, 1, 0)
-	conn.SetMtu(1350)
-	conn.SetWindowSize(1024, 1024)
-	conn.SetACKNoDelay(true)
-	conn.SetKeepAlive(10)
-
-	session, err := smux.Client(conn, smuxConfig)
-	if err != nil {
-		this.log.Info("SSCLIENT: kcp smux.Client error ", err)
-		return nil, errors.New("SSCLIENT: kcp smux.Client error " + err.Error())
-	}
-	stream, err := session.OpenStream()
-	if err != nil {
-		this.log.Info("SSCLIENT: kcp session.OpenStream error ", err.Error())
-		return nil, errors.New("SSCLIENT: kcp session.OpenStream error " + err.Error())
-	}
-	return stream, nil
 }
 
-func (this *SSClient) getRequestRemoteAddr(client io.ReadWriter) (buf []byte, err error) {
-	const (
-		LenTypeIpv4       = 3 + 1 + net.IPv4len + 2
-		LenTypeIpv6       = 3 + 1 + net.IPv6len + 2
-		LenTypeDoaminBase = 3 + 1 + 1 + 2
+func (this *SSClient) getRequestRemoteAddr(client io.ReadWriter) (addr []byte, err error) {
 
-		rawType = 3
-		rawAddr = 4
-	)
+	addr = make([]byte, 260) // 260 byte
 
-	buf = make([]byte, 260) // 260 byte
-
-	n, err := client.Read(buf)
-	if err != nil || n < rawType {
+	n, err := client.Read(addr)
+	if err != nil || n < CLIENT_RAW_TYPE {
 		this.log.Info("Read error ", err)
 		return nil, err
 	}
 
 	reqLen := -1
-	switch buf[rawType] {
-	case typeIpv4:
-		reqLen = LenTypeIpv4
-	case typeIpv6:
-		reqLen = LenTypeIpv6
-	case typeDomain:
-		reqLen = int(buf[rawAddr]) + LenTypeDoaminBase
+	switch addr[CLIENT_RAW_TYPE] {
+	case TYPE_IPV4:
+		reqLen = CLIENT_LEN_TYPE_IPV4
+	case TYPE_IPV6:
+		reqLen = CLIENT_LEN_TYPE_IPV6
+	case TYPE_DOMAIN:
+		reqLen = int(addr[CLIENT_RAW_ADDR]) + CLIENT_LEN_TYPE_DOMAIN_BASE
 	default:
 		this.log.Info("Raw addr err", &client)
 		return nil, errors.New("Raw addr err")
 	}
 
 	if n < reqLen {
-		if _, err := io.ReadFull(client, buf[n:reqLen]); err != nil {
+		if _, err := io.ReadFull(client, addr[n:reqLen]); err != nil {
 			this.log.Info("ReadFull err..", err)
 			return nil, err
 		}
 	}
-	buf = buf[rawType:reqLen]
+	addr = addr[CLIENT_RAW_TYPE:reqLen]
 	return
 }
 
-func (this *SSClient) Start() error {
+func (this *SSClient) initListen() error {
+	if this.local_net == KCP_PROTOCOL {
+		return errors.New("浏览器（或其他软件）连接到本客户端是不支持kcp协议的")
+	}
 	var err error
-	this.ln, err = net.Listen("tcp", fmt.Sprintf(":%d", this.local_port))
+	this.ln, err = net.Listen(string(this.local_net), fmt.Sprintf(":%d", this.local_port))
 	if err != nil {
 		this.log.Info("Listen err ", err)
-		return err
 	}
+	return nil
+}
+
+func (this *SSClient) Start() error {
+	this.initListen()
+
 	this.log.Info("Listen port", this.local_port)
 	for {
 		conn, err := this.ln.Accept()
@@ -192,6 +173,9 @@ func (this *SSClient) Start() error {
 }
 
 func (this *SSClient) Stop() error {
+	if this.ln == nil {
+		return nil
+	}
 	return this.ln.Close()
 }
 
@@ -199,11 +183,13 @@ func (this *SSClient) LocalPort() int {
 	return this.local_port
 }
 
-func NewClient(local_port int, server_addr, pwd, crypt string) *SSClient {
+func NewClient(local_net NetProtocol, local_port int, server_addr string, channel_net NetProtocol, pwd, crypt string) *SSClient {
 	return &SSClient{
 		crypt:       crypt,
 		pwd:         pwd,
+		local_net:   local_net,
 		local_port:  local_port,
+		channel_net: channel_net,
 		server_addr: server_addr,
 		log:         log.NewLogger("SSClient"),
 	}

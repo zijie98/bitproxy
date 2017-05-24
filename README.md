@@ -59,3 +59,4 @@ rkproxy是一个 Shadowsocks/TCP/HTTPReproxy 代理软件
 - 流量统计
 - 宽带控制
 - API功能
+- IP屏蔽

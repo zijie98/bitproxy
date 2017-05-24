@@ -40,6 +40,9 @@ func (this *TcpProxy) Start() error {
 }
 
 func (this *TcpProxy) Stop() error {
+	if this.ln == nil {
+		return nil
+	}
 	return this.ln.Close()
 }
 

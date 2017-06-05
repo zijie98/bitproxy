@@ -23,6 +23,8 @@ type HttpReproxy struct {
 	proxyClient *fasthttp.HostClient
 }
 
+var ReproxyUserAgent = "RKProxy1.0"
+
 func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	this.log.Info("request : ", ctx.URI().String())
 	retry := 0
@@ -52,7 +54,7 @@ func (this *HttpReproxy) prepareRequest(req *fasthttp.Request) {
 	// do not proxy "Connection" header.
 	req.Header.Del("Connection")
 	if len(req.Header.UserAgent()) <= 1 {
-		req.Header.Set("User-Agent", "RKProxy1.0")
+		req.Header.Set("User-Agent", ReproxyUserAgent)
 	}
 	req.Header.Set("From", this.from_name)
 }
@@ -61,7 +63,7 @@ func (this *HttpReproxy) postprocessResponse(resp *fasthttp.Response) {
 	// do not proxy "Connection" header
 	resp.Header.Del("Connection")
 
-	resp.Header.Set("Server", "RKProxy1.0")
+	resp.Header.Set("Server", ReproxyUserAgent)
 	resp.Header.Set("From", this.from_name)
 }
 

@@ -21,38 +21,7 @@ rkproxy是一个 Shadowsocks/TCP/HTTPReproxy 代理软件
 
 ### 使用教程
 
-程序目录下新建config.json文件
-```json
-{
-    "stream": [
-        {
-            "local_port": 8080,
-            "local_net": "tcp", // tcp or udp
-            "remote_host": "baidu.com",
-            "remote_port": 80
-        }
-    ],
-    "ss-client":[
-        {
-            "local_net": "tcp", // tcp or udp
-            "local_port": 8081,
-            "server_host": "127.0.0.1",
-            "server_port": 8082,
-            "password": "123",
-            "channel_net": "kcp", // kcp udp tcp 客户端与服务器端之间的传输协议
-            "crypt": "not"   // not salsa20 chacha20 rc4md5 
-        }
-    ],
-    "ss-server": [
-        {
-            "channel_net": "kcp", // kcp udp tcp 同上 
-            "server_port": 8082,
-            "password": "123",
-            "crypt": "not"  // 同上
-        }
-    ]
-}
-```
+程序目录下新建config.json文件, 参考`config.json.example`
 
 ### 待续
 

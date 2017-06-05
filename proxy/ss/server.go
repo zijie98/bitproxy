@@ -164,7 +164,7 @@ func (this *SSServer) Start() error {
 		this.log.Info("Listen by protocol err: ", err)
 		return err
 	}
-	this.log.Info("listen ", this.port)
+	this.log.Info("Listen port", this.port)
 
 	for {
 		if conn, err := this.AcceptClient(); err == nil {

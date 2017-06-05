@@ -33,7 +33,7 @@ func (this *StreamProxy) Start() error {
 		this.log.Info("Can't Listen port: ", this.local_port, " ", err)
 		return err
 	}
-	this.log.Info("Start tcp/udp proxy.")
+	this.log.Info("Listen port", this.local_port)
 	for {
 		conn, err := this.ln.Accept()
 		if err != nil {

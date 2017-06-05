@@ -106,7 +106,7 @@ func (this *Manager) RunAll() {
 
 	if len(this.handles) > 0 {
 		for _, handle := range this.handles {
-			handle.Start()
+			go handle.Start()
 		}
 	}
 }

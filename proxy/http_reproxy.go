@@ -66,6 +66,8 @@ func (this *HttpReproxy) postprocessResponse(resp *fasthttp.Response) {
 }
 
 func (this *HttpReproxy) Start() error {
+	this.log.Info("Listen port", this.local_port)
+
 	this.proxyClient = &fasthttp.HostClient{
 		Addr: utils.JoinHostPort(this.remote_host, this.remote_port),
 	}

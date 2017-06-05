@@ -9,107 +9,55 @@ package manager
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"rkproxy/log"
-	"rkproxy/utils"
-
-	"github.com/kataras/go-errors"
 	"os"
-	"strings"
+
+	"github.com/jinzhu/configor"
+	"rkproxy/log"
 )
 
 type Manager struct {
-	handles          map[uint]ProxyHandler
-	config_file_path string
-	config_content   []byte
+	handles     map[uint]ProxyHandler
+	config_path string
 
 	log *log.Logger
 }
 
 func New(config_path string) (man *Manager) {
 	man = &Manager{
-		config_file_path: config_path,
-		handles:          make(map[uint]ProxyHandler),
-		log:              log.NewLogger("Manager"),
-	}
-	man.readConfigByFilePath()
-	return man
-}
-
-func NewByConfigContent(content []byte) (man *Manager) {
-	man = &Manager{
-		config_content: content,
-		handles:        make(map[uint]ProxyHandler),
-		log:            log.NewLogger("Manager"),
+		config_path: config_path,
+		handles:     make(map[uint]ProxyHandler),
+		log:         log.NewLogger("Manager"),
 	}
 	return man
-}
-
-func (this *Manager) readConfigByFilePath() (err error) {
-	file, err := os.Open(this.config_file_path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	this.config_content, err = ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-	this.config_content = []byte(strings.TrimSpace(string(this.config_content)))
-	if len(this.config_content) == 0 {
-		return errors.New("config.json中没有内容")
-	}
-	return nil
 }
 
 func (this *Manager) GetHandles() map[uint]ProxyHandler {
 	return this.handles
 }
 
-func (this *Manager) SetConfigContent(content []byte) {
-	this.config_content = content
-}
-
 //	将配置文件格式化到配置
 //
 func (this *Manager) ParseConfig() (err error) {
-	var temp map[string][]map[string]interface{}
-	err = json.Unmarshal(this.config_content, &temp)
-	if err != nil {
-		this.log.Info("Unmarshal出错：", err)
-		return err
-	}
-
-	for k, v := range temp {
-		switch k {
-		case "stream":
-			for _, val := range v {
-				cfg := StreamProxyConfig{}
-				utils.FillStruct(val, &cfg)
-				this.CreateStreamProxy(&cfg)
-			}
-		case "ss-client":
-			for _, val := range v {
-				cfg := SsClientConfig{}
-				utils.FillStruct(val, &cfg)
-				this.CreateSsClient(&cfg)
-			}
-		case "ss-server":
-			for _, val := range v {
-				cfg := SsServerConfig{}
-				utils.FillStruct(val, &cfg)
-				this.CreateSsServer(&cfg)
-			}
-		case "http-reproxy":
-			for _, val := range v {
-				cfg := HttpReproxyConfig{}
-				utils.FillStruct(val, &cfg)
-				this.CreateHttpReproxy(&cfg)
-			}
+	err = configor.Load(&Config, this.config_path)
+	if Config.HttpReproxy != nil {
+		for _, cfg := range Config.HttpReproxy {
+			this.CreateHttpReproxy(&cfg)
 		}
 	}
-	return nil
+	if Config.Stream != nil {
+		for _, cfg := range Config.Stream {
+			this.CreateStreamProxy(&cfg)
+		}
+	}
+	if Config.SsClient.LocalPort != 0 {
+		this.CreateSsClient(&Config.SsClient)
+	}
+	if Config.SsServer != nil {
+		for _, cfg := range Config.SsServer {
+			this.CreateSsServer(&cfg)
+		}
+	}
+	return
 }
 
 //	将配置格式化为json字符串
@@ -124,10 +72,10 @@ func (this *Manager) formatConfig() (json_bytes []byte, err error) {
 func (this *Manager) SaveToConfig() error {
 	json_bytes, err := this.formatConfig()
 	if err != nil {
-		this.log.Info("格式化配置{", this.config_file_path, "}出错:", err)
+		this.log.Info("格式化配置{", this.config_path, "}出错:", err)
 		return err
 	}
-	file, err := os.Create(this.config_file_path)
+	file, err := os.Create(this.config_path)
 	if err != nil {
 		this.log.Info("创建配置文件失败: ", err)
 		return err
@@ -183,7 +131,7 @@ func (this *Manager) CreateSsClient(config *SsClientConfig) ProxyHandler {
 //
 func (this *Manager) CreateSsServer(config *SsServerConfig) ProxyHandler {
 	handle := NewSsServer(config)
-	this.handles[config.LocalPort] = handle
+	this.handles[config.Port] = handle
 	return handle
 }
 

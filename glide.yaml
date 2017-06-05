@@ -1,9 +1,0 @@
-package: rkproxy
-import:
-- package: github.com/kataras/go-errors
-  version: ^0.0.3
-- package: github.com/xtaci/kcp-go
-  version: ^20160629.0.0
-- package: github.com/xtaci/smux
-  version: ^1.0.4
-- package: golang.org/x/crypto/pbkdf2

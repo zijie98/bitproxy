@@ -1,0 +1,39 @@
+{
+  "api": {
+    "password": "helloworld"
+  },
+  "stream": [
+    {
+      "local_net": "tcp",
+      "local_port": 80,
+      "server_host": "127.0.01",
+      "server_port": 80
+    }
+  ],
+  "ss_client": {
+    "local_net": "tcp",
+    "local_port": 1081,
+    "server_host": "rkecloud.com",
+    "server_port": 4001,
+    "channel_net": "tcp",
+    "password": "pwd",
+    "crypt": "xor"
+  }
+  ,
+  "ss_server": [
+    {
+      "password": "pwd",
+      "port": 4001,
+      "channel_net": "tcp",
+      "crypt": "xor"
+    }
+  ],
+  "http_reproxy": [
+    {
+      "local_port": 80,
+      "server_host": "180.149.132.47",
+      "server_port": 80,
+      "name": "cdn-hk-1"
+    }
+  ]
+}

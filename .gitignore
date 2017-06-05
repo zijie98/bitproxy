@@ -2,3 +2,4 @@
 rkproxy
 test-*
 !test/*.go
+config.json

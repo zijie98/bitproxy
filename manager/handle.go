@@ -66,8 +66,8 @@ func NewStreamProxy(config *StreamProxyConfig) *StreamProxyHandle {
 	pxy := proxy.NewStreamProxy(
 		ss.NetProtocol(config.LocalNet),
 		config.LocalPort,
-		config.RemoteHost,
-		config.RemotePort,
+		config.ServerHost,
+		config.ServerPort,
 	)
 	handle := &StreamProxyHandle{
 		Handle: Handle{
@@ -99,7 +99,7 @@ func NewSsClient(config *SsClientConfig) *SsClientHandle {
 func NewSsServer(config *SsServerConfig) *SsServerHandle {
 	pxy := ss.NewServer(
 		ss.NetProtocol(config.ChannelNet),
-		config.LocalPort,
+		config.Port,
 		config.Password,
 		config.Crypt,
 	)
@@ -115,8 +115,9 @@ func NewSsServer(config *SsServerConfig) *SsServerHandle {
 func NewHttpReproxy(config *HttpReproxyConfig) *HttpReproxyHandle {
 	pxy := proxy.NewHttpReproxy(
 		config.LocalPort,
-		config.RemoteHost,
-		config.RemotePort,
+		config.ServerHost,
+		config.ServerPort,
+		config.Name,
 	)
 	handle := &HttpReproxyHandle{
 		Handle: Handle{

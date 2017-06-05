@@ -4,43 +4,25 @@ import (
 	"fmt"
 	"rkproxy/manager"
 	//"reflect"
+	"os"
 )
 
 func main() {
-	config := []byte(`
-		{
-			"tcp": [
-				{
-					"local_port": 8080,
-					"remote_host": "baidu.com",
-					"remote_port": 80
-				}
-			],
-			"ss-client":[
-				{
-					"local_port": 8081,
-					"remote_host": "127.0.0.1",
-					"remote_port": 8082,
-					"password": "123",
-					"crypt": "XOR"
-				}
-			],
-			"ss-server": [
-				{
-					"server_port": 8082,
-					"password": "123",
-					"crypt": "XOR"
-				}
-			]
-		}
-	`)
-	man := manager.NewByConfigContent(config)
-	err := man.ParseConfig()
+	filepath := "config.json"
+	file, err := os.OpenFile(filepath, os.O_RDWR, 0755)
+	if err != nil {
+		fmt.Println("open test.json fail:", err)
+		return
+	}
+	defer file.Close()
+
+	man := manager.New(filepath)
+	err = man.ParseConfig()
 	if err != nil {
 		fmt.Println("ParseConfig .. ", err)
 		return
 	}
 	handles := man.GetHandles()
-	port := handles[8080].ListeningPort()
-	fmt.Println(port == 8080)
+	port := handles[1081].ListeningPort()
+	fmt.Println(port == 1081)
 }

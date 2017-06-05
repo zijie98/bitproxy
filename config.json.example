@@ -17,7 +17,7 @@
     "server_port": 4001,
     "channel_net": "tcp",
     "password": "pwd",
-    "crypt": "xor"
+    "crypt": "not"  # rc4md5 salsa20 chacha20 not
   }
   ,
   "ss_server": [

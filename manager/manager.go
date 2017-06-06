@@ -8,7 +8,6 @@
 package manager
 
 import (
-	"encoding/json"
 	"os"
 
 	"github.com/jinzhu/configor"
@@ -49,8 +48,8 @@ func (this *Manager) ParseConfig() (err error) {
 			this.CreateStreamProxy(&cfg)
 		}
 	}
-	if Config.SsClient.LocalPort != 0 {
-		this.CreateSsClient(&Config.SsClient)
+	if Config.SsClient != nil {
+		this.CreateSsClient(Config.SsClient)
 	}
 	if Config.SsServer != nil {
 		for _, cfg := range Config.SsServer {
@@ -60,22 +59,15 @@ func (this *Manager) ParseConfig() (err error) {
 	return
 }
 
-//	将配置格式化为json字符串
-//
-func (this *Manager) formatConfig() (json_bytes []byte, err error) {
-	json_bytes, err = json.Marshal(this.handles)
-	return
-}
-
 //	保存配置到配置文件
 //
 func (this *Manager) SaveToConfig() error {
-	json_bytes, err := this.formatConfig()
+	json_bytes, err := Config.toBytes()
 	if err != nil {
 		this.log.Info("格式化配置{", this.config_path, "}出错:", err)
 		return err
 	}
-	file, err := os.Create(this.config_path)
+	file, err := os.OpenFile(this.config_path, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		this.log.Info("创建配置文件失败: ", err)
 		return err

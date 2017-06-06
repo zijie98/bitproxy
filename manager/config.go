@@ -4,6 +4,10 @@
 
 package manager
 
+import (
+	"encoding/json"
+)
+
 // FTP代理
 
 // HTTP代理
@@ -46,13 +50,22 @@ type SsServerConfig struct {
 	Password   string `json:"password"`
 }
 
-var Config = struct {
+type ProxyConfig struct {
 	Api struct {
 		Password string
 	}
 	Stream      []StreamProxyConfig `json:"stream"`
 	HttpReproxy []HttpReproxyConfig `json:"http_reproxy"`
 
-	SsClient SsClientConfig   `json:"ss_client"`
+	SsClient *SsClientConfig  `json:"ss_client"`
 	SsServer []SsServerConfig `json:"ss_server"`
-}{}
+}
+
+//	将配置格式化为json字符串
+//
+func (this ProxyConfig) toBytes() (b []byte, err error) {
+	b, err = json.Marshal(this)
+	return
+}
+
+var Config ProxyConfig

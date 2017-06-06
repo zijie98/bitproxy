@@ -15,17 +15,17 @@ import (
 )
 
 type Manager struct {
-	handles     map[uint]ProxyHandler
-	config_path string
+	handles    map[uint]ProxyHandler
+	configPath string
 
 	log *log.Logger
 }
 
-func New(config_path string) (man *Manager) {
+func New(configPath string) (man *Manager) {
 	man = &Manager{
-		config_path: config_path,
-		handles:     make(map[uint]ProxyHandler),
-		log:         log.NewLogger("Manager"),
+		configPath: configPath,
+		handles:    make(map[uint]ProxyHandler),
+		log:        log.NewLogger("Manager"),
 	}
 	return man
 }
@@ -37,7 +37,7 @@ func (this *Manager) GetHandles() map[uint]ProxyHandler {
 //	将配置文件格式化到配置
 //
 func (this *Manager) ParseConfig() (err error) {
-	err = configor.Load(&Config, this.config_path)
+	err = configor.Load(&Config, this.configPath)
 	if Config.HttpReproxy != nil {
 		for _, cfg := range Config.HttpReproxy {
 			this.CreateHttpReproxy(&cfg)
@@ -62,19 +62,19 @@ func (this *Manager) ParseConfig() (err error) {
 //	保存配置到配置文件
 //
 func (this *Manager) SaveToConfig() error {
-	json_bytes, err := Config.toBytes()
+	b, err := Config.toBytes()
 	if err != nil {
-		this.log.Info("格式化配置{", this.config_path, "}出错:", err)
+		this.log.Info("格式化配置{", this.configPath, "}出错:", err)
 		return err
 	}
-	file, err := os.OpenFile(this.config_path, os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(this.configPath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		this.log.Info("创建配置文件失败: ", err)
 		return err
 	}
 	defer file.Close()
 
-	_, err = file.Write(json_bytes)
+	_, err = file.Write(b)
 	if err != nil {
 		this.log.Info("写入配置到配置文件出错：", err)
 	}

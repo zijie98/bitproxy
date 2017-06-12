@@ -6,4 +6,4 @@ rkproxy.pid
 Capfile
 config
 log
-rkproxy
+/rkproxy

@@ -1,5 +1,7 @@
 .idea/
-rkproxy
 test-*
 !test/*.go
 config.json
+Capfile
+config
+log

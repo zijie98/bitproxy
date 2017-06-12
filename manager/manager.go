@@ -38,6 +38,9 @@ func (this *Manager) GetHandles() map[uint]ProxyHandler {
 //
 func (this *Manager) ParseConfig() (err error) {
 	err = configor.Load(&Config, this.configPath)
+	if err != nil {
+		return err
+	}
 	if Config.HttpReproxy != nil {
 		for _, cfg := range Config.HttpReproxy {
 			this.CreateHttpReproxy(&cfg)

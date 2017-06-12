@@ -6,6 +6,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,18 +15,21 @@ import (
 	"runtime"
 )
 
-const config_path = "config.json"
+var config_path = "config.json"
 
-var man *manager.Manager = manager.New(config_path)
+var man *manager.Manager
 var log *logger.Logger = logger.NewLogger("Main")
 
 func listen_signal() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		for sig := range c {
-			fmt.Printf("ctrl+c(%v)\n", sig)
-			man.StopAll()
+		select {
+		case sig := <-c:
+			fmt.Printf("ctrl+c (%v)\n", sig)
+			if man != nil {
+				man.StopAll()
+			}
 			os.Exit(0)
 		}
 	}()
@@ -35,6 +39,11 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	listen_signal()
+
+	flag.StringVar(&config_path, "c", "config.json", "配置文件")
+	flag.Parse()
+
+	man = manager.New(config_path)
 
 	err := man.ParseConfig()
 	if err != nil {

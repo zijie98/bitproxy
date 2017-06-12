@@ -11,6 +11,8 @@ import (
 	"rkproxy/utils"
 
 	"github.com/valyala/fasthttp"
+	"net"
+	"rkproxy/libs"
 )
 
 type HttpReproxy struct {
@@ -23,23 +25,27 @@ type HttpReproxy struct {
 	proxyClient *fasthttp.HostClient
 }
 
-var ReproxyUserAgent = "RKProxy1.0"
+var ReproxyUserAgent = "RKProxy"
 
 func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
-	this.log.Info("request : ", ctx.URI().String())
+	this.log.Info(" Client ip", ctx.RemoteIP(), " request url: ", ctx.URI().String())
 	retry := 0
 	retry_count := 2
 	req := &ctx.Request
 	resp := &ctx.Response
 
 	this.prepareRequest(req)
+	if this.isBlack(ctx.RemoteAddr()) {
+		this.log.Info("Was Black ", ctx.RemoteIP())
+		return
+	}
 
 	for retry < retry_count {
 		if err := this.proxyClient.Do(req, resp); err != nil {
 			this.log.Info("error when proxying the request: %s", err)
 		}
 		if resp.StatusCode() == fasthttp.StatusBadGateway {
-			this.log.Info("Request 502..")
+			this.log.Info("Response status code 502.. retrying")
 			time.Sleep(2 * time.Second)
 			retry++
 		} else {
@@ -48,6 +54,12 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	this.postprocessResponse(resp)
+}
+
+func (this *HttpReproxy) isBlack(addr net.Addr) bool {
+	ip, _, _ := net.SplitHostPort(addr.String())
+	blacklist.BlackWall.AddIp(ip)
+	return blacklist.BlackWall.IsBlack(ip)
 }
 
 func (this *HttpReproxy) prepareRequest(req *fasthttp.Request) {

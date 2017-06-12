@@ -23,8 +23,9 @@ rkproxy是一个 Shadowsocks/TCP/HTTPReproxy 代理软件
 
 程序目录下新建config.json文件, 参考`config.json.example`
 
-### 待续
+## 待续
 
+#### 功能
 - 暂时还未完善的测试
 - 加入FTP代理
 - shadowsocks支持原生的TCP/UDP协议
@@ -32,3 +33,9 @@ rkproxy是一个 Shadowsocks/TCP/HTTPReproxy 代理软件
 - 宽带控制
 - API功能
 - IP屏蔽
+
+#### API
+
+- 获取启动的代理
+- 启动/停止代理
+- 获取/设置屏蔽IP

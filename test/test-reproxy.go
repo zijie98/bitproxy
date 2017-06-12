@@ -21,6 +21,11 @@ func main() {
 		fmt.Println("... dial err ", err)
 		return
 	}
+	normal_test(conn)
+}
+
+func normal_test(conn net.Conn) {
+
 	http_get_request_string := `GET / HTTP/1.1
 Host: douban.com
 Connection: keep-alive

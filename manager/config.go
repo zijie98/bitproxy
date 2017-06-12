@@ -6,6 +6,7 @@ package manager
 
 import (
 	"encoding/json"
+	"net"
 )
 
 // FTP代理

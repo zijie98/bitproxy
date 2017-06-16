@@ -58,8 +58,14 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 
 func (this *HttpReproxy) isBlack(addr net.Addr) bool {
 	ip, _, _ := net.SplitHostPort(addr.String())
-	blacklist.BlackWall.AddIp(ip)
-	return blacklist.BlackWall.IsBlack(ip)
+	if blacklist.BlackAts.IsBlack(ip) {
+		return true
+	}
+	blacklist.BlackFilter <- blacklist.RequestAt{
+		Ip: ip,
+		At: time.Now(),
+	}
+	return false
 }
 
 func (this *HttpReproxy) prepareRequest(req *fasthttp.Request) {

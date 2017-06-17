@@ -1,0 +1,181 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "hqDDDpue/5363luidNMBS8z8eJU=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "99064174e013895bbd9b025c31100bd1d9b590ca",
+			"revisionTime": "2016-07-17T15:07:09Z"
+		},
+		{
+			"checksumSHA1": "QPs3L3mjPoi+a9GJCjW8HhyJczM=",
+			"path": "github.com/codahale/chacha20",
+			"revision": "ec07b4f69a3f70b1dd2a8ad77230deb1ba5d6953",
+			"revisionTime": "2015-11-07T02:50:05Z"
+		},
+		{
+			"checksumSHA1": "ei/FyAed4h941oj3zucBQx6NNEA=",
+			"path": "github.com/jinzhu/configor",
+			"revision": "b7df2005e02e9226447139012db968eda90a4b91",
+			"revisionTime": "2017-01-13T15:44:04Z"
+		},
+		{
+			"checksumSHA1": "oOOoWMOCyOoZ594DKzopz9w9kew=",
+			"path": "github.com/kataras/go-errors",
+			"revision": "0f977b82cc78d5d31bb75fb6f903ad9e852c8bbd",
+			"revisionTime": "2016-09-18T10:12:19Z"
+		},
+		{
+			"checksumSHA1": "dwwpXbg9nIAQmuCBAw6EaSS+I84=",
+			"path": "github.com/klauspost/compress/flate",
+			"revision": "1e658061989f47658e69492cf63a839630a25eba",
+			"revisionTime": "2016-10-20T15:14:30Z"
+		},
+		{
+			"checksumSHA1": "V1lQwkoDR1fPmZBSgkmZjgZofeU=",
+			"path": "github.com/klauspost/compress/gzip",
+			"revision": "1e658061989f47658e69492cf63a839630a25eba",
+			"revisionTime": "2016-10-20T15:14:30Z"
+		},
+		{
+			"checksumSHA1": "+azPXaZpPF14YHRghNAer13ThQU=",
+			"path": "github.com/klauspost/compress/zlib",
+			"revision": "1e658061989f47658e69492cf63a839630a25eba",
+			"revisionTime": "2016-10-20T15:14:30Z"
+		},
+		{
+			"checksumSHA1": "iKPMvbAueGfdyHcWCgzwKzm8WVo=",
+			"path": "github.com/klauspost/cpuid",
+			"revision": "09cded8978dc9e80714c4d85b0322337b0a1e5e0",
+			"revisionTime": "2016-03-02T07:53:16Z"
+		},
+		{
+			"checksumSHA1": "BM6ZlNJmtKy3GBoWwg2X55gnZ4A=",
+			"path": "github.com/klauspost/crc32",
+			"revision": "cb6bfca970f6908083f26f39a79009d608efd5cd",
+			"revisionTime": "2016-10-16T15:41:25Z"
+		},
+		{
+			"checksumSHA1": "uSK4wTmjvMs/BUOQxp/mIppJWcI=",
+			"path": "github.com/klauspost/reedsolomon",
+			"revision": "d0a56f72c0d40a6cdde43a1575ad9686a0098b70",
+			"revisionTime": "2016-10-28T07:13:20Z"
+		},
+		{
+			"checksumSHA1": "ynJSWoF6v+3zMnh9R0QmmG6iGV8=",
+			"path": "github.com/pkg/errors",
+			"revision": "248dadf4e9068a0b3e79f02ed0a610d935de5302",
+			"revisionTime": "2016-10-29T09:36:37Z"
+		},
+		{
+			"checksumSHA1": "LTOa3BADhwvT0wFCknPueQALm8I=",
+			"path": "github.com/valyala/bytebufferpool",
+			"revision": "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7",
+			"revisionTime": "2016-08-17T18:16:52Z"
+		},
+		{
+			"checksumSHA1": "CEZl4n9y3JGs0Q1jNFFxv1V1vTg=",
+			"path": "github.com/valyala/fasthttp",
+			"revision": "b154429ca951971beae8427b1a918ebce58f64af",
+			"revisionTime": "2017-05-17T14:10:29Z"
+		},
+		{
+			"checksumSHA1": "nFdyJk6jdHzVNgEMdjDuWMk4z5o=",
+			"path": "github.com/valyala/fasthttp/fasthttputil",
+			"revision": "b154429ca951971beae8427b1a918ebce58f64af",
+			"revisionTime": "2017-05-17T14:10:29Z"
+		},
+		{
+			"checksumSHA1": "YXXy4b1yOQx/iL3Icv6svTmcGss=",
+			"path": "github.com/valyala/fasthttp/stackless",
+			"revision": "b154429ca951971beae8427b1a918ebce58f64af",
+			"revisionTime": "2017-05-17T14:10:29Z"
+		},
+		{
+			"checksumSHA1": "DIVsm7hcJfSQE7MN8ldaONyxLuI=",
+			"path": "github.com/xtaci/kcp-go",
+			"revision": "1a8d8c1d4fb43cee8cfc32fa464d2592a2923f1a",
+			"revisionTime": "2016-11-30T10:19:57Z"
+		},
+		{
+			"checksumSHA1": "JsJdKXhz87gWenMwBeejTOeNE7k=",
+			"path": "golang.org/x/crypto/blowfish",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "TT1rac6kpQp2vz24m5yDGUNQ/QQ=",
+			"path": "golang.org/x/crypto/cast5",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "o5QDZYQhyiEt2jg1Fot34mR1rBg=",
+			"path": "golang.org/x/crypto/salsa20",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "w8PESKJweP+BCAxCYPU1QC08qUU=",
+			"path": "golang.org/x/crypto/salsa20/salsa",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "Iwv89z1aXYKaB936lnsmE2NcfqA=",
+			"path": "golang.org/x/crypto/tea",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "/qXTeb4Dp6W5qlttwaN+Yur36+A=",
+			"path": "golang.org/x/crypto/twofish",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "d37eTFvbbuPQcKt5vkgsx+6C4c0=",
+			"path": "golang.org/x/crypto/xtea",
+			"revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+			"revisionTime": "2017-03-17T13:29:17Z"
+		},
+		{
+			"checksumSHA1": "tK8eFmQ0JeKpR3P0TjiGobzlIh0=",
+			"path": "golang.org/x/net/bpf",
+			"revision": "b400c2eff1badec7022a8c8f5bea058b6315eed7",
+			"revisionTime": "2016-06-19T19:44:24Z"
+		},
+		{
+			"checksumSHA1": "yRuyntx9a59ugMi5NlN4ST0XRcI=",
+			"path": "golang.org/x/net/internal/iana",
+			"revision": "b400c2eff1badec7022a8c8f5bea058b6315eed7",
+			"revisionTime": "2016-06-19T19:44:24Z"
+		},
+		{
+			"checksumSHA1": "BJrlL/vetMJZLv8XPuzvw3ZITaU=",
+			"path": "golang.org/x/net/ipv4",
+			"revision": "b400c2eff1badec7022a8c8f5bea058b6315eed7",
+			"revisionTime": "2016-06-19T19:44:24Z"
+		},
+		{
+			"checksumSHA1": "LvdVRE0FqdR68SvVpRkHs1rxhcA=",
+			"path": "golang.org/x/net/proxy",
+			"revision": "b400c2eff1badec7022a8c8f5bea058b6315eed7",
+			"revisionTime": "2016-06-19T19:44:24Z"
+		},
+		{
+			"checksumSHA1": "MGk7cSnHqiL5soaovzgcJaNH3fc=",
+			"path": "gopkg.in/yaml.v1",
+			"revision": "9f9df34309c04878acc86042b16630b0f696e1de",
+			"revisionTime": "2014-09-24T16:16:07Z"
+		}
+	],
+	"rootPath": "rkproxy"
+}

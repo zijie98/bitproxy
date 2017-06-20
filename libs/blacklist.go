@@ -14,7 +14,7 @@ import (
 
 const (
 	MAX_BETWEEN = 1  // 最后一次请求和最近的请求的间隔多少秒
-	MAX_LIMIT   = 15 // MAX_BETWEEN时间内的请求量
+	MAX_LIMIT   = 20 // MAX_BETWEEN时间内的请求量
 
 	MAX_FILTER_LIMIT = 200
 )

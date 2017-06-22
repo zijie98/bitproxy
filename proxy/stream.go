@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	"io"
 	"rkproxy/log"
 	"rkproxy/proxy/ss"
 	"rkproxy/utils"
@@ -26,8 +27,7 @@ type StreamProxy struct {
 	log *log.Logger
 }
 
-func (this *StreamProxy) Start() error {
-	var err error
+func (this *StreamProxy) Start() (err error) {
 	this.ln, err = net.Listen(string(this.local_net), utils.JoinHostPort("", this.local_port))
 	if err != nil {
 		this.log.Info("Can't Listen port: ", this.local_port, " ", err)
@@ -40,6 +40,7 @@ func (this *StreamProxy) Start() error {
 			this.log.Info("Can't Accept: ", err)
 			break
 		}
+		this.log.Info("Client ip", conn.RemoteAddr().String())
 		go this.handle(conn)
 	}
 	return nil
@@ -66,8 +67,24 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 		this.log.Info("Dial remote host fall: ", err)
 		return
 	}
-	go utils.Copy(remote_conn, local_conn)
-	utils.Copy(local_conn, remote_conn)
+	var done = make(chan bool, 2)
+	go func(dsc io.WriteCloser, src io.ReadCloser) {
+		_, err := utils.Copy(dsc, src)
+		if err != nil {
+			done <- true
+		}
+	}(remote_conn, local_conn)
+
+	go func(dsc io.WriteCloser, src io.ReadCloser) {
+		_, err := utils.Copy(dsc, src)
+		if err != nil {
+			done <- true
+		}
+	}(local_conn, remote_conn)
+
+	<-done
+	local_conn.Close()
+	remote_conn.Close()
 }
 
 func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint) *StreamProxy {

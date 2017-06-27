@@ -42,7 +42,7 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	this.prepareRequest(req)
 
 	for retry < retry_count {
-		if err := this.proxyClient.Do(req, resp); err != nil {
+		if err := this.proxyClient.DoTimeout(req, resp, 10*time.Second); err != nil {
 			this.log.Info("error when proxying the request: %s", err)
 		}
 		if resp.StatusCode() == fasthttp.StatusBadGateway {
@@ -53,7 +53,7 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 			break
 		}
 	}
-
+	//defer req.ResetBody()
 	this.postprocessResponse(resp)
 }
 

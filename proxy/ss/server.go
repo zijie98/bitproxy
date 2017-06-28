@@ -28,6 +28,7 @@ type SSServer struct {
 	channel_net NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
 	ln          net.Listener
 	log         *log.Logger
+	done        bool
 }
 
 func (this *SSServer) getRequest(client io.Reader) (host string, extra []byte, err error) {
@@ -167,11 +168,17 @@ func (this *SSServer) Start() error {
 	this.log.Info("Listen port", this.port)
 
 	for {
-		if conn, err := this.AcceptClient(); err == nil {
+		conn, err := this.AcceptClient()
+		if err == nil {
 			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr())
 			go this.handle(conn)
 		} else {
-			this.log.Info("Accept err ", this.port, " ", err)
+			if this.done {
+				this.ln = nil
+				break
+			} else {
+				this.log.Info("Accept err ", this.port, " ", err)
+			}
 		}
 	}
 	return nil
@@ -181,6 +188,7 @@ func (this *SSServer) Stop() error {
 	if this.ln == nil {
 		return nil
 	}
+	this.done = true
 	return this.ln.Close()
 }
 

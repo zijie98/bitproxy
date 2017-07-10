@@ -57,6 +57,10 @@ func (this *StreamProxy) LocalPort() uint {
 	return this.local_port
 }
 
+func (this *StreamProxy) Traffic() (uint64, error) {
+	return 0, nil
+}
+
 func (this *StreamProxy) handle(local_conn net.Conn) {
 	remote_conn, err := net.DialTimeout(
 		string(this.local_net),

@@ -50,10 +50,19 @@ type SsServerConfig struct {
 	Password   string `json:"password"`
 }
 
+type ApiConfig struct {
+	Port     uint   `json:"port"`
+	Password string `json:"password"`
+}
+
+type RedisConfig struct {
+	Port uint   `json:"port" default:"6379"`
+	Host string `json:"host" default:"127.0.0.1"`
+}
+
 type ProxyConfig struct {
-	Api struct {
-		Password string
-	}
+	Api         *ApiConfig          `json:"api"`
+	Redis       *RedisConfig        `json:"redis"`
 	Stream      []StreamProxyConfig `json:"stream"`
 	HttpReproxy []HttpReproxyConfig `json:"http_reproxy"`
 

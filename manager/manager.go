@@ -14,6 +14,8 @@ import (
 	"rkproxy/log"
 )
 
+var Man *Manager
+
 type Manager struct {
 	handles    map[uint]ProxyHandler
 	configPath string
@@ -21,17 +23,27 @@ type Manager struct {
 	log *log.Logger
 }
 
-func New(configPath string) (man *Manager) {
-	man = &Manager{
+func New(configPath string) {
+	Man = &Manager{
 		configPath: configPath,
 		handles:    make(map[uint]ProxyHandler),
 		log:        log.NewLogger("Manager"),
 	}
-	return man
 }
 
+func (this *Manager) Config() *ProxyConfig {
+	return &Config
+}
 func (this *Manager) GetHandles() map[uint]ProxyHandler {
 	return this.handles
+}
+
+func (this *Manager) FindProxyByPort(port uint) ProxyHandler {
+	return this.handles[port]
+}
+
+func (this *Manager) DeleteByPort(port uint) {
+	delete(this.handles, port)
 }
 
 //	将配置文件格式化到配置

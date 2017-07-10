@@ -174,7 +174,6 @@ func (this *SSServer) Start() error {
 			go this.handle(conn)
 		} else {
 			if this.done {
-				this.ln = nil
 				break
 			} else {
 				this.log.Info("Accept err ", this.port, " ", err)
@@ -184,12 +183,20 @@ func (this *SSServer) Start() error {
 	return nil
 }
 
-func (this *SSServer) Stop() error {
+func (this *SSServer) Stop() (err error) {
 	if this.ln == nil {
 		return nil
 	}
 	this.done = true
-	return this.ln.Close()
+	if this.ln != nil {
+		err = this.ln.Close()
+		this.ln = nil
+	}
+	return
+}
+
+func (this *SSServer) Traffic() (uint64, error) {
+	return 0, nil
 }
 
 func (this *SSServer) LocalPort() uint {

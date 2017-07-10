@@ -36,6 +36,11 @@ rkproxy是一个 Shadowsocks/TCP/HTTPReproxy 代理软件
 
 #### API
 
+```
+API请求必须在Header中加上password字段。
+例如 USER-PWD: password 作为验证，否则无法操作API
+```
+
 - 获取启动的代理
 - 启动/停止代理
 - 获取/设置屏蔽IP

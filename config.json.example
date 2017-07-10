@@ -1,6 +1,7 @@
 {
   "api": {
-    "password": "helloworld"
+    "password": "helloworld",
+    "port": 1990
   },
   "stream": [
     {

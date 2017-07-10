@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
+
 	logger "rkproxy/log"
 	"rkproxy/manager"
-	"runtime"
+	"rkproxy/manager/api"
 )
 
 var (
@@ -23,7 +25,7 @@ var (
 var man *manager.Manager
 var log *logger.Logger = logger.NewLogger("Main")
 
-func listen_signal() {
+func listenSignal() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -38,13 +40,13 @@ func listen_signal() {
 	}()
 }
 
-func init_flag() {
+func initFlag() {
 	flag.StringVar(&config_path, "c", "config.json", "配置文件")
 	flag.StringVar(&pid_path, "p", "rkproxy.pid", "进程id路径")
 	flag.Parse()
 }
 
-func init_pid() {
+func initPid() {
 	file, err := os.OpenFile(pid_path, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("写pid文件错误：", err)
@@ -54,22 +56,34 @@ func init_pid() {
 	file.Write([]byte(fmt.Sprintf("%d", os.Getpid())))
 }
 
+func initApi(config *manager.ApiConfig) error {
+	return api.Start(config.Password, config.Port)
+}
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	init_flag()
-	init_pid()
-	listen_signal()
+	initFlag()
+	initPid()
+	listenSignal()
 
-	man = manager.New(config_path)
+	manager.New(config_path)
 
-	err := man.ParseConfig()
+	err := manager.Man.ParseConfig()
 	if err != nil {
 		log.Info(err.Error())
 		return
 	}
 
-	man.RunAll()
+	manager.Man.RunAll()
+
+	if manager.Man.Config().Api != nil {
+		err = initApi(manager.Man.Config().Api)
+		if err != nil {
+			log.Info(err.Error())
+			return
+		}
+	}
 
 	select {}
 }

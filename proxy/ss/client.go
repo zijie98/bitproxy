@@ -179,6 +179,10 @@ func (this *SSClient) Stop() error {
 	return this.ln.Close()
 }
 
+func (this *SSClient) Traffic() (uint64, error) {
+	return 0, nil
+}
+
 func (this *SSClient) LocalPort() uint {
 	return this.local_port
 }

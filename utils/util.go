@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"time"
+
+	"github.com/garyburd/redigo/redis"
 )
 
 func JoinHostPort(host string, port uint) string {
@@ -17,7 +20,6 @@ func FillStruct(data map[string]interface{}, result interface{}) {
 	types := reflect.TypeOf(result).Elem()
 
 	for k, v := range data {
-		//fmt.Println("-------------------------", k)
 		for i := 0; i < value.NumField(); i++ {
 			key := types.Field(i).Tag.Get("json")
 			if key == k {
@@ -28,5 +30,16 @@ func FillStruct(data map[string]interface{}, result interface{}) {
 				value.Field(i).Set(reflect.ValueOf(v))
 			}
 		}
+	}
+}
+
+var RedisPool *redis.Pool
+
+func init() {
+	RedisPool = &redis.Pool{
+		MaxIdle: 3,
+		//MaxActive:   256,
+		IdleTimeout: 240 * time.Second,
+		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", ":6379") },
 	}
 }

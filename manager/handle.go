@@ -15,6 +15,7 @@ type Proxyer interface {
 	Start() error
 	Stop() error
 	LocalPort() uint
+	Traffic() (uint64, error)
 }
 
 //	句柄接口
@@ -24,6 +25,7 @@ type ProxyHandler interface {
 	Start() error
 	Stop() error
 	GetConfig() interface{}
+	GetTraffic() (uint64, error)
 }
 
 //	句柄
@@ -44,6 +46,9 @@ func (this *Handle) Stop() error {
 }
 func (this *Handle) GetConfig() interface{} {
 	return this.Config
+}
+func (this *Handle) GetTraffic() (uint64, error) {
+	return this.Proxy.Traffic()
 }
 
 type HttpReproxyHandle struct {

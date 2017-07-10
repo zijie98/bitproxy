@@ -24,9 +24,9 @@ type RequestAt struct {
 	At time.Time
 }
 
-var BlackFilter = make(chan RequestAt, MAX_FILTER_LIMIT)
+var Filter = make(chan RequestAt, MAX_FILTER_LIMIT)
 
-type BlackList struct {
+type BlackWall struct {
 	blacks   map[string]bool
 	runtimes map[string]*list.List
 
@@ -38,26 +38,26 @@ type BlackList struct {
 	mtx sync.Mutex
 }
 
-var BlackAts *BlackList
+var Wall *BlackWall
 
 func init() {
-	if BlackAts == nil {
-		BlackAts = &BlackList{
+	if Wall == nil {
+		Wall = &BlackWall{
 			max_limit:   MAX_LIMIT,
 			max_between: MAX_BETWEEN,
 			runtimes:    make(map[string]*list.List),
 			blacks:      make(map[string]bool),
 		}
-		BlackAts.Start()
+		Wall.Start()
 	}
 }
 
-func (r *BlackList) Start() {
+func (r *BlackWall) Start() {
 	go func() {
 		for {
 			select {
-			case req := <-BlackFilter:
-				r.addIp(req)
+			case req := <-Filter:
+				r.AddIp(req)
 			case <-r.done:
 				return
 			}
@@ -65,11 +65,11 @@ func (r *BlackList) Start() {
 	}()
 }
 
-func (r *BlackList) Stop() {
+func (r *BlackWall) Stop() {
 	r.done <- true
 }
 
-func (r *BlackList) addIp(ip RequestAt) {
+func (r *BlackWall) AddIp(ip RequestAt) {
 	if r.IsBlack(ip.Ip) {
 		return
 	}
@@ -85,30 +85,30 @@ func (r *BlackList) addIp(ip RequestAt) {
 	r.check(ip)
 }
 
-func (r *BlackList) black(ip string) {
+func (r *BlackWall) Black(ip string) {
 	r.blacks[ip] = true
 }
 
-func (r *BlackList) IsBlack(ip string) bool {
+func (r *BlackWall) IsBlack(ip string) bool {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	return r.blacks[ip]
 }
 
-func (r *BlackList) check(ip RequestAt) {
+func (r *BlackWall) check(ip RequestAt) {
 	if r.runtimes[ip.Ip].Len() < r.max_limit {
 		return
 	}
 	back := r.runtimes[ip.Ip].Back().Value.(time.Time)
 	front := r.runtimes[ip.Ip].Front().Value.(time.Time)
-	if (front.Unix() - back.Unix()) <= r.max_between { // 最新和最后一次请求时间小于等于max_between则为非法请求
-		r.black(ip.Ip)
+	if (front.Unix() - back.Unix()) <= r.max_between { // 最新和最后一次请求时间小于等于MAX_BETWEEN则为非法请求
+		r.Black(ip.Ip)
 	}
-	r.runtimes[ip.Ip].Init() // 超过10个请求清空
+	r.runtimes[ip.Ip].Init() // 超过MAX_LIMIT个请求清空
 }
 
-func (r *BlackList) Remove(ip string) {
+func (r *BlackWall) Remove(ip string) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 

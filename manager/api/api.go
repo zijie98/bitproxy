@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"os"
 
+	"fmt"
 	"gopkg.in/gin-gonic/gin.v1"
+	"rkproxy/manager"
 	"rkproxy/utils"
 )
 
@@ -17,25 +19,29 @@ func InitEngine() *gin.Engine {
 
 	httpReproxy := router.Group("/HttpReproxy")
 	{
-		httpReproxy.POST("/", CreateHttpReproxy)
-		httpReproxy.POST("/:action", ActionHttpReproxy)
+		httpReproxy.POST("/", CreateHttpReproxy, afterFunc)
+		httpReproxy.POST("/:action", ActionHttpReproxy, afterFunc)
 	}
 	ssServer := router.Group("/SsServer")
 	{
-		ssServer.POST("/", CreateSsServer)
-		ssServer.POST("/:action", ActionSsServer)
+		ssServer.POST("/", CreateSsServer, afterFunc)
+		ssServer.POST("/:action", ActionSsServer, afterFunc)
 	}
 	stream := router.Group("/Stream")
 	{
-		stream.POST("/", CreateStream)
-		stream.POST("/:action", ActionStream)
+		stream.POST("/", CreateStream, afterFunc)
+		stream.POST("/:action", ActionStream, afterFunc)
 	}
 	black := router.Group("/Black")
 	{
-		black.POST("/", CreateBlack)
-		black.POST("/:action", ActionBlack)
+		black.POST("/", CreateBlack, afterFunc)
+		black.POST("/:action", ActionBlack, afterFunc)
 	}
 	return router
+}
+
+func afterFunc(ctx *gin.Context) {
+	manager.Man.SaveToConfig()
 }
 
 func Start(pwd string, port uint) error {

@@ -73,14 +73,14 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 	}
 	var done = make(chan bool, 2)
 	go func(dsc io.WriteCloser, src io.ReadCloser) {
-		_, err := utils.Copy(dsc, src)
+		_, err := utils.Copy(dsc, src, nil)
 		if err != nil {
 			done <- true
 		}
 	}(remote_conn, local_conn)
 
 	go func(dsc io.WriteCloser, src io.ReadCloser) {
-		_, err := utils.Copy(dsc, src)
+		_, err := utils.Copy(dsc, src, nil)
 		if err != nil {
 			done <- true
 		}

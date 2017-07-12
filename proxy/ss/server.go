@@ -101,8 +101,8 @@ func (this *SSServer) handle(client net.Conn) {
 			return
 		}
 	}
-	go utils.Copy(client, remote)
-	utils.Copy(remote, client)
+	go utils.Copy(client, remote, nil)
+	utils.Copy(remote, client, nil)
 }
 
 func (this *SSServer) initListen() (err error) {

@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 
-	"fmt"
 	"gopkg.in/gin-gonic/gin.v1"
 	"rkproxy/manager"
 	"rkproxy/utils"

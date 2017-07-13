@@ -15,6 +15,7 @@ import (
 	logger "rkproxy/log"
 	"rkproxy/manager"
 	"rkproxy/manager/api"
+	"rkproxy/utils"
 )
 
 var (
@@ -60,6 +61,10 @@ func initApi(config *manager.ApiConfig) error {
 	return api.Start(config.Password, config.Port)
 }
 
+func initRedis(config *manager.RedisConfig) {
+	utils.InitRedis(config.Host, config.Port)
+}
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -76,6 +81,10 @@ func main() {
 	}
 
 	manager.Man.RunAll()
+
+	if manager.Man.Config().Redis != nil {
+		initRedis(manager.Man.Config().Redis)
+	}
 
 	if manager.Man.Config().Api != nil {
 		err = initApi(manager.Man.Config().Api)

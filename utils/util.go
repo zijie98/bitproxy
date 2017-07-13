@@ -35,11 +35,11 @@ func FillStruct(data map[string]interface{}, result interface{}) {
 
 var RedisPool *redis.Pool
 
-func init() {
+func InitRedis(host string, port uint) {
 	RedisPool = &redis.Pool{
 		MaxIdle: 3,
 		//MaxActive:   256,
 		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", ":6379") },
+		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", JoinHostPort(host, port)) },
 	}
 }

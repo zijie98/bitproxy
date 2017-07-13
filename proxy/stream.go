@@ -75,14 +75,14 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 	var done = make(chan bool, 2)
 	var limit = &utils.Limiter{Rate: this.rate}
 
-	var copy_data = func(dsc io.WriteCloser, src io.ReadCloser) {
-		_, err := utils.Copy(dsc, src, limit)
+	var copy_data = func(dsc io.WriteCloser, src io.ReadCloser, l *utils.Limiter) {
+		_, err := utils.Copy(dsc, src, l)
 		if err != nil {
 			done <- true
 		}
 	}
-	go copy_data(remote_conn, local_conn)
-	go copy_data(local_conn, remote_conn)
+	go copy_data(remote_conn, local_conn, limit)
+	go copy_data(local_conn, remote_conn, nil)
 
 	<-done
 	local_conn.Close()

@@ -104,7 +104,7 @@ func (this *SSServer) handle(client net.Conn) {
 	}
 	limit := &utils.Limiter{Rate: this.rate}
 	go utils.Copy(client, remote, limit)
-	utils.Copy(remote, client, limit)
+	utils.Copy(remote, client, nil)
 }
 
 func (this *SSServer) initListen() (err error) {

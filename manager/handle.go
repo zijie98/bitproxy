@@ -73,6 +73,7 @@ func NewStreamProxy(config *StreamProxyConfig) *StreamProxyHandle {
 		config.LocalPort,
 		config.ServerHost,
 		config.ServerPort,
+		config.Rate,
 	)
 	handle := &StreamProxyHandle{
 		Handle: Handle{
@@ -107,6 +108,7 @@ func NewSsServer(config *SsServerConfig) *SsServerHandle {
 		config.Port,
 		config.Password,
 		config.Crypt,
+		config.Rate,
 	)
 	handle := &SsServerHandle{
 		Handle: Handle{

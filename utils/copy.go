@@ -2,8 +2,6 @@ package utils
 
 import (
 	"io"
-	//"sync"
-	"fmt"
 	"net"
 	"time"
 )
@@ -22,7 +20,10 @@ func Copy(dst io.Writer, src io.Reader, limit *Limiter) (written int64, err erro
 	defer CopyPool.Put(buf)
 
 	for {
-		src.(net.Conn).SetReadDeadline(time.Now().Add(5 * time.Second))
+		switch src.(type) {
+		case net.Conn:
+			src.(net.Conn).SetReadDeadline(time.Now().Add(5 * time.Second))
+		}
 		nr, er := src.Read(buf)
 		if nr > 0 {
 			nw, ew := dst.Write(buf[0:nr])
@@ -58,8 +59,11 @@ type Limiter struct {
 }
 
 func (l *Limiter) Sleep() {
-	s := 1000 / (l.Rate / (CopyPoolSize / 1024))
-	t := time.Duration(s) * time.Microsecond
-	fmt.Printf("sleep ... %d ms", t)
+	if l.Rate <= 0 {
+		return
+	}
+	s := (1000 * 1000) / (l.Rate / (CopyPoolSize / 1024)) // 间隔时间
+	t := time.Duration(s) * time.Microsecond              // t = ms
+	//fmt.Printf("sleep ... %dns  - %dms \n", t, s)
 	time.Sleep(t)
 }

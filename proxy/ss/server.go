@@ -26,6 +26,7 @@ type SSServer struct {
 	pwd         string
 	port        uint
 	channel_net NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
+	rate        uint
 	ln          net.Listener
 	log         *log.Logger
 	done        bool
@@ -101,8 +102,9 @@ func (this *SSServer) handle(client net.Conn) {
 			return
 		}
 	}
-	go utils.Copy(client, remote, nil)
-	utils.Copy(remote, client, nil)
+	limit := &utils.Limiter{Rate: this.rate}
+	go utils.Copy(client, remote, limit)
+	utils.Copy(remote, client, limit)
 }
 
 func (this *SSServer) initListen() (err error) {
@@ -203,12 +205,13 @@ func (this *SSServer) LocalPort() uint {
 	return this.port
 }
 
-func NewServer(channel_net NetProtocol, port uint, pwd, crypt string) *SSServer {
+func NewServer(channel_net NetProtocol, port uint, pwd, crypt string, rate uint) *SSServer {
 	return &SSServer{
 		crypt:       crypt,
 		pwd:         pwd,
 		port:        port,
 		channel_net: channel_net,
+		rate:        rate,
 		log:         log.NewLogger("SSServer"),
 	}
 }

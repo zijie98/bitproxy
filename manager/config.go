@@ -29,6 +29,7 @@ type StreamProxyConfig struct {
 	LocalPort  uint   `json:"local_port"`
 	ServerHost string `json:"server_host"`
 	ServerPort uint   `json:"server_port"`
+	Rate       uint   `json:"rate"`
 }
 
 // Shadowsocks 客户端配置
@@ -48,6 +49,7 @@ type SsServerConfig struct {
 	ChannelNet string `json:"channel_net"`
 	Crypt      string `json:"crypt"`
 	Password   string `json:"password"`
+	Rate       uint   `json:"rate"`
 }
 
 type ApiConfig struct {

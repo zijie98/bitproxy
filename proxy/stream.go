@@ -22,6 +22,7 @@ type StreamProxy struct {
 	local_net   ss.NetProtocol
 	remote_host string
 	remote_port uint
+	rate        uint
 
 	ln  net.Listener
 	log *log.Logger
@@ -72,31 +73,29 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 		return
 	}
 	var done = make(chan bool, 2)
-	go func(dsc io.WriteCloser, src io.ReadCloser) {
-		_, err := utils.Copy(dsc, src, nil)
-		if err != nil {
-			done <- true
-		}
-	}(remote_conn, local_conn)
+	var limit = &utils.Limiter{Rate: this.rate}
 
-	go func(dsc io.WriteCloser, src io.ReadCloser) {
-		_, err := utils.Copy(dsc, src, nil)
+	var copy_data = func(dsc io.WriteCloser, src io.ReadCloser) {
+		_, err := utils.Copy(dsc, src, limit)
 		if err != nil {
 			done <- true
 		}
-	}(local_conn, remote_conn)
+	}
+	go copy_data(remote_conn, local_conn)
+	go copy_data(local_conn, remote_conn)
 
 	<-done
 	local_conn.Close()
 	remote_conn.Close()
 }
 
-func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint) *StreamProxy {
+func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint, rate uint) *StreamProxy {
 	return &StreamProxy{
 		local_net:   local_net,
 		local_port:  local_port,
 		remote_host: remote_host,
 		remote_port: remote_port,
+		rate:        rate,
 		log:         log.NewLogger("TCP/UDP PROXY"),
 	}
 }

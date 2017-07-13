@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"net"
 	"reflect"
-	"time"
-
-	"github.com/garyburd/redigo/redis"
 )
 
 func JoinHostPort(host string, port uint) string {
@@ -30,16 +27,5 @@ func FillStruct(data map[string]interface{}, result interface{}) {
 				value.Field(i).Set(reflect.ValueOf(v))
 			}
 		}
-	}
-}
-
-var RedisPool *redis.Pool
-
-func InitRedis(host string, port uint) {
-	RedisPool = &redis.Pool{
-		MaxIdle: 3,
-		//MaxActive:   256,
-		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", JoinHostPort(host, port)) },
 	}
 }

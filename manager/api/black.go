@@ -20,7 +20,7 @@ func CreateBlack(ctx *gin.Context) {
 		return
 	}
 	for _, ip := range ips.Ips {
-		blacklist.Wall.Black(ip)
+		libs.Wall.Black(ip)
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
@@ -37,7 +37,7 @@ func ActionBlack(ctx *gin.Context) {
 	switch action {
 	case "remove":
 		for _, ip := range ips.Ips {
-			blacklist.Wall.Remove(ip)
+			libs.Wall.Remove(ip)
 		}
 	default:
 		err = errors.New("not found action")

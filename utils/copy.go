@@ -15,7 +15,9 @@ func init() {
 	CopyPool.Init(1*time.Hour, maxNBuf)
 }
 
-func Copy(dst io.Writer, src io.Reader, limit *Limiter) (written int64, err error) {
+type CopyCallbackFunc func(int)
+
+func Copy(dst io.Writer, src io.Reader, limit *Limiter, call CopyCallbackFunc) (written int64, err error) {
 	buf := CopyPool.Get(CopyPoolSize)
 	defer CopyPool.Put(buf)
 
@@ -48,6 +50,10 @@ func Copy(dst io.Writer, src io.Reader, limit *Limiter) (written int64, err erro
 		}
 		if limit != nil {
 			limit.Sleep()
+		}
+
+		if call != nil {
+			call(nr)
 		}
 	}
 	return written, err

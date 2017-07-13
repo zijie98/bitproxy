@@ -4,7 +4,7 @@
 - 实现思路：保存IP的最近x次访问的时间，最新与最后一次对比，如果时间间隔少于n秒，则视为恶意IP(一秒钟超过10个请求则屏蔽)
 - 目的：屏蔽一定程度的CC攻击
 */
-package blacklist
+package libs
 
 import (
 	"container/list"

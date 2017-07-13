@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"io"
+	"rkproxy/libs"
 	"rkproxy/log"
 	"rkproxy/proxy/ss"
 	"rkproxy/utils"
@@ -75,8 +76,12 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 	var done = make(chan bool, 2)
 	var limit = &utils.Limiter{Rate: this.rate}
 
+	var traffic_stats = func(n int) {
+		libs.AddTrafficStats(this.local_port, n)
+	}
+
 	var copy_data = func(dsc io.WriteCloser, src io.ReadCloser, l *utils.Limiter) {
-		_, err := utils.Copy(dsc, src, l)
+		_, err := utils.Copy(dsc, src, l, traffic_stats)
 		if err != nil {
 			done <- true
 		}

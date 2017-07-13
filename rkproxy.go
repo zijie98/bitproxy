@@ -12,10 +12,10 @@ import (
 	"os/signal"
 	"runtime"
 
+	"rkproxy/libs"
 	logger "rkproxy/log"
 	"rkproxy/manager"
 	"rkproxy/manager/api"
-	"rkproxy/utils"
 )
 
 var (
@@ -62,7 +62,7 @@ func initApi(config *manager.ApiConfig) error {
 }
 
 func initRedis(config *manager.RedisConfig) {
-	utils.InitRedis(config.Host, config.Port)
+	libs.InitRedis(config.Host, config.Port)
 }
 
 func main() {

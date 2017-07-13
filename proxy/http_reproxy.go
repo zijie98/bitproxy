@@ -5,14 +5,14 @@
 package proxy
 
 import (
+	"net"
 	"time"
 
+	"rkproxy/libs"
 	"rkproxy/log"
 	"rkproxy/utils"
 
 	"github.com/valyala/fasthttp"
-	"net"
-	"rkproxy/libs"
 )
 
 type HttpReproxy struct {
@@ -59,10 +59,10 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 
 func (this *HttpReproxy) isBlack(addr net.Addr) bool {
 	ip, _, _ := net.SplitHostPort(addr.String())
-	if blacklist.Wall.IsBlack(ip) {
+	if libs.Wall.IsBlack(ip) {
 		return true
 	}
-	blacklist.Filter <- blacklist.RequestAt{
+	libs.Filter <- libs.RequestAt{
 		Ip: ip,
 		At: time.Now(),
 	}

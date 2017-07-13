@@ -82,8 +82,8 @@ func (this *SSClient) handle(client io.ReadWriter) {
 	// ss协议中，将把浏览器的请求发给服务器
 	server.Write(raw_addr)
 
-	go utils.Copy(client, server, nil)
-	utils.Copy(server, client, nil)
+	go utils.Copy(client, server, nil, nil)
+	utils.Copy(server, client, nil, nil)
 }
 
 func (this *SSClient) getServerConn() (net.Conn, error) {

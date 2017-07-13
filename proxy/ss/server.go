@@ -17,6 +17,7 @@ import (
 	"github.com/xtaci/kcp-go"
 	//"github.com/xtaci/smux"
 
+	"rkproxy/libs"
 	"rkproxy/log"
 	"rkproxy/utils"
 )
@@ -103,8 +104,11 @@ func (this *SSServer) handle(client net.Conn) {
 		}
 	}
 	limit := &utils.Limiter{Rate: this.rate}
-	go utils.Copy(client, remote, limit)
-	utils.Copy(remote, client, nil)
+	var traffic_stats = func(n int) {
+		libs.AddTrafficStats(this.port, n)
+	}
+	go utils.Copy(client, remote, limit, traffic_stats)
+	utils.Copy(remote, client, nil, nil)
 }
 
 func (this *SSServer) initListen() (err error) {

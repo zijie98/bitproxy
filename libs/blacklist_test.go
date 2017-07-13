@@ -1,4 +1,4 @@
-package blacklist
+package libs
 
 import (
 	"testing"

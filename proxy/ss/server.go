@@ -12,7 +12,8 @@ import (
 	"fmt"
 	"io"
 	"net"
-	//"time"
+	"strings"
+	"time"
 
 	"github.com/xtaci/kcp-go"
 	//"github.com/xtaci/smux"
@@ -175,15 +176,26 @@ func (this *SSServer) Start() error {
 
 	for {
 		conn, err := this.AcceptClient()
-		if err == nil {
-			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr())
-			go this.handle(conn)
-		} else {
+		if err != nil {
 			if this.done {
 				break
-			} else {
-				this.log.Info("Accept err ", this.port, " ", err)
 			}
+			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+				this.log.Info("Temporary error when accepting new connections: ", netErr)
+				time.Sleep(time.Second)
+				continue
+			}
+			if err != io.EOF && !strings.Contains(err.Error(), "use of closed network connection") {
+				this.log.Info("Permanent error when accepting new connections: ", err)
+				return err
+			}
+			if err != nil {
+				this.log.Info("Accept err ", this.port, " ", err)
+				continue
+			}
+		} else {
+			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr())
+			go this.handle(conn)
 		}
 	}
 	return nil

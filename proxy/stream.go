@@ -40,7 +40,7 @@ func (this *StreamProxy) Start() (err error) {
 		conn, err := this.ln.Accept()
 		if err != nil {
 			this.log.Info("Can't Accept: ", err)
-			break
+			continue
 		}
 		this.log.Info("Client ip", conn.RemoteAddr().String())
 		go this.handle(conn)

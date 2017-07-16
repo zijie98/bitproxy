@@ -164,7 +164,7 @@ func (this *SSClient) Start() error {
 		conn, err := this.ln.Accept()
 		if err != nil {
 			this.log.Info("Accept err ", err)
-			break
+			continue
 		}
 		this.log.Info("Accept ip ", conn.RemoteAddr(), "client ", &conn)
 		go this.handle(conn)

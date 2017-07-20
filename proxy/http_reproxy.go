@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"rkproxy/libs"
-	"rkproxy/log"
 	"rkproxy/utils"
 
 	"github.com/valyala/fasthttp"
@@ -20,7 +19,7 @@ type HttpReproxy struct {
 	remote_host string
 	remote_port uint
 	from_name   string
-	log         *log.Logger
+	log         *utils.Logger
 
 	proxyClient *fasthttp.HostClient
 }
@@ -118,6 +117,6 @@ func NewHttpReproxy(local_port uint, remote_host string, remote_port uint, from_
 		remote_host: remote_host,
 		remote_port: remote_port,
 		from_name:   from_name,
-		log:         log.NewLogger("HttpReverseProxy"),
+		log:         utils.NewLogger("HttpReverseProxy"),
 	}
 }

@@ -18,7 +18,6 @@ import (
 	"github.com/xtaci/kcp-go"
 	//"github.com/xtaci/smux"
 
-	"rkproxy/log"
 	"rkproxy/utils"
 )
 
@@ -30,7 +29,7 @@ type SSClient struct {
 	channel_net NetProtocol // tcp/udp/kcp， ss客户端 -> ss服务器 之间的通信方式
 	server_addr string      // 8.8.8.8:1990
 	ln          net.Listener
-	log         *log.Logger
+	log         *utils.Logger
 }
 
 func (this *SSClient) handle(client io.ReadWriter) {
@@ -195,6 +194,6 @@ func NewClient(local_net NetProtocol, local_port uint, server_addr string, chann
 		local_port:  local_port,
 		channel_net: channel_net,
 		server_addr: server_addr,
-		log:         log.NewLogger("SSClient"),
+		log:         utils.NewLogger("SSClient"),
 	}
 }

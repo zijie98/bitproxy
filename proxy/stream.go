@@ -9,7 +9,6 @@ import (
 
 	"io"
 	"rkproxy/libs"
-	"rkproxy/log"
 	"rkproxy/proxy/ss"
 	"rkproxy/utils"
 )
@@ -26,7 +25,7 @@ type StreamProxy struct {
 	rate        uint
 
 	ln  net.Listener
-	log *log.Logger
+	log *utils.Logger
 }
 
 func (this *StreamProxy) Start() (err error) {
@@ -101,6 +100,6 @@ func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host strin
 		remote_host: remote_host,
 		remote_port: remote_port,
 		rate:        rate,
-		log:         log.NewLogger("TCP/UDP PROXY"),
+		log:         utils.NewLogger("TCP/UDP PROXY"),
 	}
 }

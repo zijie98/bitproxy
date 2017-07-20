@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"net"
-	"rkproxy/log"
 	"rkproxy/utils"
 )
 
@@ -10,7 +9,7 @@ type FtpProxy struct {
 	local_port  uint
 	remote_host string
 	remote_port uint
-	log         *log.Logger
+	log         *utils.Logger
 
 	ln net.Listener
 }
@@ -52,6 +51,6 @@ func NewFtpProxy(local_port uint, remote_host string, remote_port uint) *FtpProx
 		local_port:  local_port,
 		remote_host: remote_host,
 		remote_port: remote_port,
-		log:         log.NewLogger("FtpProxy"),
+		log:         utils.NewLogger("FtpProxy"),
 	}
 }

@@ -11,7 +11,7 @@ import (
 	"os"
 
 	"github.com/jinzhu/configor"
-	"rkproxy/log"
+	"rkproxy/utils"
 )
 
 var Man *Manager
@@ -20,14 +20,14 @@ type Manager struct {
 	handles    map[uint]ProxyHandler
 	configPath string
 
-	log *log.Logger
+	log *utils.Logger
 }
 
 func New(configPath string) {
 	Man = &Manager{
 		configPath: configPath,
 		handles:    make(map[uint]ProxyHandler),
-		log:        log.NewLogger("Manager"),
+		log:        utils.NewLogger("Manager"),
 	}
 }
 

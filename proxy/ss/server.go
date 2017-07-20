@@ -19,7 +19,6 @@ import (
 	//"github.com/xtaci/smux"
 
 	"rkproxy/libs"
-	"rkproxy/log"
 	"rkproxy/utils"
 )
 
@@ -30,7 +29,7 @@ type SSServer struct {
 	channel_net NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
 	rate        uint
 	ln          net.Listener
-	log         *log.Logger
+	log         *utils.Logger
 	done        bool
 }
 
@@ -228,6 +227,6 @@ func NewServer(channel_net NetProtocol, port uint, pwd, crypt string, rate uint)
 		port:        port,
 		channel_net: channel_net,
 		rate:        rate,
-		log:         log.NewLogger("SSServer"),
+		log:         utils.NewLogger("SSServer"),
 	}
 }

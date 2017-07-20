@@ -13,9 +13,9 @@ import (
 	"runtime"
 
 	"rkproxy/libs"
-	logger "rkproxy/log"
 	"rkproxy/manager"
 	"rkproxy/manager/api"
+	"rkproxy/utils"
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 )
 
 var man *manager.Manager
-var log *logger.Logger = logger.NewLogger("Main")
+var log *utils.Logger = utils.NewLogger("Main")
 
 func listenSignal() {
 	c := make(chan os.Signal, 1)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"rkproxy/utils"
+	"strconv"
 )
 
 type Stats struct {
@@ -34,6 +35,10 @@ func DeleteTrafficStats(port uint) {
 	deleteTrafficStats <- &Stats{Port: port}
 }
 
+func GetTraffic(port uint) (uint64, error) {
+	return getTraffic(port)
+}
+
 func StartStats() {
 	go func() {
 		select {
@@ -48,6 +53,16 @@ func StartStats() {
 			deleteFromTheRedis(s)
 		}
 	}()
+}
+
+func getTraffic(port uint) (uint64, error) {
+	conn := RedisPool.Get()
+	key := statsKey(port)
+	reply, err := conn.Do("GET", key)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseUint(reply.(string), 10, 64)
 }
 
 func statsToRedis(s *Stats) error {

@@ -39,20 +39,44 @@ func GetTraffic(port uint) (uint64, error) {
 	return getTraffic(port)
 }
 
+// 开始统计
 func StartStats() {
+
+	// 累加流量
 	go func() {
-		select {
-		case s := <-trafficStats:
-			statsToRedis(s)
+		for {
+			select {
+			case s := <-trafficStats:
+				statsToRedis(s)
+			}
 		}
 	}()
 
+	// 清空流量
 	go func() {
-		select {
-		case s := <-deleteTrafficStats:
-			deleteFromTheRedis(s)
+		for {
+			select {
+			case s := <-deleteTrafficStats:
+				deleteFromTheRedis(s)
+			}
 		}
 	}()
+
+	// 定时SAVE持久化redis
+	go func() {
+		for {
+			select {
+			case <-time.After(10 * time.Second):
+				persistent()
+			}
+		}
+	}()
+}
+
+// 持久化
+func persistent() {
+	conn := RedisPool.Get()
+	conn.Send("SAVE")
 }
 
 func getTraffic(port uint) (uint64, error) {

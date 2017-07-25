@@ -63,14 +63,14 @@ func StartStats() {
 	}()
 
 	// 定时SAVE持久化redis
-	go func() {
-		for {
-			select {
-			case <-time.After(10 * time.Second):
-				persistent()
-			}
-		}
-	}()
+	//go func() {
+	//	for {
+	//		select {
+	//		case <-time.After(10 * time.Second):
+	//			persistent()
+	//		}
+	//	}
+	//}()
 }
 
 // 持久化

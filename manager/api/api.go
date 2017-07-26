@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/gin-gonic/gin.v1"
 	"rkproxy/manager"
@@ -55,10 +56,11 @@ func Start(pwd string, port uint) error {
 }
 
 func logfile() (file *os.File, err error) {
-	wd, err := os.Getwd()
+	wd, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		return nil, err
 	}
+
 	logPath := wd + "/api.log"
 	file, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

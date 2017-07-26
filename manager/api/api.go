@@ -34,8 +34,8 @@ func InitEngine() *gin.Engine {
 	}
 	black := router.Group("/Black")
 	{
-		black.POST("/", CreateBlack, afterFunc)
-		black.POST("/:action", ActionBlack, afterFunc)
+		black.POST("/", CreateBlack)
+		black.POST("/:action", ActionBlack)
 	}
 	return router
 }

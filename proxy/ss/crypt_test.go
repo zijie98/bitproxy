@@ -8,7 +8,7 @@ import (
 )
 
 func TestNotCrypt(t *testing.T) {
-	testCrypt(t, CryptNOT)
+	testCrypt(t, CryptXor)
 }
 
 func TestRC4MD5Crypt(t *testing.T) {
@@ -35,7 +35,7 @@ func testCrypt(t *testing.T, method string) {
 		t.Fatal(err)
 	}
 
-	if method == CryptNOT {
+	if method == CryptXor {
 		stream.XORKeyStream(buff, buff)
 		stream.XORKeyStream(buff, buff)
 	} else {

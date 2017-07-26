@@ -4,9 +4,12 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rc4"
+	"crypto/sha1"
 	"encoding/binary"
+	"unsafe"
 
 	"github.com/codahale/chacha20"
+	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/salsa20/salsa"
 	"rkproxy/utils"
 )
@@ -22,7 +25,7 @@ const (
 	Encrypt
 )
 const (
-	CryptNOT      = "not"
+	CryptXor      = "xor"
 	CryptSalsa20  = "salsa20"
 	CryptChacha20 = "chacha20"
 	CryptRc4md5   = "rc4md5"
@@ -31,7 +34,7 @@ const (
 type DecOrEnc int
 
 var CipherMethod = map[string]*cipherInfo{
-	CryptNOT:      {0, 0, newNOTStream},
+	CryptXor:      {0, 0, newXorStream},
 	CryptRc4md5:   {16, 16, newRC4MD5Stream},
 	CryptChacha20: {32, 8, newChaCha20Stream},
 	CryptSalsa20:  {32, 8, newSalsa20Stream},
@@ -45,27 +48,63 @@ func newRC4MD5Stream(key, iv []byte, _ DecOrEnc) (cipher.Stream, error) {
 	return rc4.NewCipher(rc4key)
 }
 
-type NotStreamCipher struct {
+type XorStreamCipher struct {
+	xortbl []byte
 }
 
-func (c *NotStreamCipher) XORKeyStream(dst, src []byte) {
-	copy(dst, src)
-	for i := 0; i < len(dst); i += 8 {
-		if i+8 > len(dst) {
-			for x := i; x < len(dst); x++ {
-				dst[x] ^= 0xFF
-			}
-			break
-		}
-		buf := dst[i : i+8]
-		uint64buf := binary.LittleEndian.Uint64(buf)
-		uint64buf ^= 0xFFFFFFFFFFFFFFFF
-		binary.LittleEndian.PutUint64(buf, uint64buf)
+const saltxor = `sH3CIVoF#rWLtJo6`
+const mtuLimit = 2048
+
+func newXorStream(key, _ []byte, _ DecOrEnc) (cipher.Stream, error) {
+	c := new(XorStreamCipher)
+	c.xortbl = pbkdf2.Key(key, []byte(saltxor), 32, mtuLimit, sha1.New)
+	return c, nil
+}
+
+const wordSize = int(unsafe.Sizeof(uintptr(0)))
+
+func (c *XorStreamCipher) XORKeyStream(dst, src []byte) {
+	c.xorBytes(dst, src, c.xortbl)
+}
+func (c *XorStreamCipher) xorBytes(dst, src, p []byte) {
+	n := len(src)
+	if len(p) < n {
+		n = len(p)
+	}
+
+	w := n / wordSize
+	if w > 0 {
+		wordBytes := w * wordSize
+		fastXORWords(dst[:wordBytes], src[:wordBytes], p[:wordBytes])
+	}
+	for i := (n - n%wordSize); i < n; i++ {
+		dst[i] = src[i] ^ p[i]
 	}
 }
 
-func newNOTStream(_, _ []byte, _ DecOrEnc) (cipher.Stream, error) {
-	return &NotStreamCipher{}, nil
+func fastXORWords(dst, a, b []byte) {
+	dw := *(*[]uintptr)(unsafe.Pointer(&dst))
+	aw := *(*[]uintptr)(unsafe.Pointer(&a))
+	bw := *(*[]uintptr)(unsafe.Pointer(&b))
+	n := len(b) / wordSize
+	ex := n % 8
+	for i := 0; i < ex; i++ {
+		dw[i] = aw[i] ^ bw[i]
+	}
+
+	for i := ex; i < n; i += 8 {
+		_dw := dw[i : i+8]
+		_aw := aw[i : i+8]
+		_bw := bw[i : i+8]
+		_dw[0] = _aw[0] ^ _bw[0]
+		_dw[1] = _aw[1] ^ _bw[1]
+		_dw[2] = _aw[2] ^ _bw[2]
+		_dw[3] = _aw[3] ^ _bw[3]
+		_dw[4] = _aw[4] ^ _bw[4]
+		_dw[5] = _aw[5] ^ _bw[5]
+		_dw[6] = _aw[6] ^ _bw[6]
+		_dw[7] = _aw[7] ^ _bw[7]
+	}
 }
 
 func newChaCha20Stream(key, iv []byte, _ DecOrEnc) (cipher.Stream, error) {

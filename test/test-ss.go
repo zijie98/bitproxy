@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	net := ss.CryptNOT
-	server := ss.NewServer(ss.KCP_PROTOCOL, 1990, "hellopwd", net)
+	net := ss.CryptXor
+	server := ss.NewServer(ss.KCP_PROTOCOL, 1990, "hellopwd", net, 0)
 	go server.Start()
 
 	client := ss.NewClient(ss.TCP_PROTOCOL, 1991, "localhost:1990", ss.KCP_PROTOCOL, "hellopwd", net)

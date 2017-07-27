@@ -213,7 +213,7 @@ func (this *SSServer) Stop() (err error) {
 }
 
 func (this *SSServer) Traffic() (uint64, error) {
-	return 0, nil
+	return libs.GetTraffic(this.port)
 }
 
 func (this *SSServer) LocalPort() uint {

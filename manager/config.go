@@ -45,11 +45,12 @@ type SsClientConfig struct {
 
 // Shadowsocks 服务器端配置
 type SsServerConfig struct {
-	Port       uint   `json:"port"`
-	ChannelNet string `json:"channel_net"`
-	Crypt      string `json:"crypt"`
-	Password   string `json:"password"`
-	Rate       uint   `json:"rate"`
+	Port          uint   `json:"port"`
+	ChannelNet    string `json:"channel_net"`
+	Crypt         string `json:"crypt"`
+	Password      string `json:"password"`
+	Rate          uint   `json:"rate"`
+	EnableTraffic bool   `json:"enable_traffic"`
 }
 
 type ApiConfig struct {

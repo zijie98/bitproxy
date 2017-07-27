@@ -18,11 +18,12 @@ const (
 )
 
 type StreamProxy struct {
-	local_port  uint
-	local_net   ss.NetProtocol
-	remote_host string
-	remote_port uint
-	rate        uint
+	local_port     uint
+	local_net      ss.NetProtocol
+	remote_host    string
+	remote_port    uint
+	rate           uint
+	enable_traffic bool
 
 	ln  net.Listener
 	log *utils.Logger
@@ -59,7 +60,7 @@ func (this *StreamProxy) LocalPort() uint {
 }
 
 func (this *StreamProxy) Traffic() (uint64, error) {
-	return 0, nil
+	return libs.GetTraffic(this.local_port)
 }
 
 func (this *StreamProxy) handle(local_conn net.Conn) {
@@ -76,6 +77,9 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 	var limit = &utils.Limiter{Rate: this.rate}
 
 	var traffic_stats = func(n int) {
+		if this.enable_traffic == false {
+			return
+		}
 		libs.AddTrafficStats(this.local_port, n)
 	}
 

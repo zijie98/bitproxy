@@ -29,10 +29,10 @@ type HttpReproxy struct {
 var ReproxyUserAgent = "RKProxy"
 
 func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
-	this.log.Info(" Client ip", ctx.RemoteIP(), " request url: ", ctx.URI().String())
+	this.log.Info(ctx.RemoteIP().String(), " - ", string(ctx.Method()), " - ", ctx.URI().String(), " - ", string(ctx.UserAgent()))
 
 	if this.enable_black && this.isBlack(ctx.RemoteAddr()) {
-		this.log.Info("Was Black ", ctx.RemoteIP())
+		this.log.Info("Blacked ", ctx.RemoteIP())
 		return
 	}
 
@@ -44,7 +44,7 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	this.prepareRequest(req)
 
 	for retry < retry_count {
-		if err := this.proxyClient.DoTimeout(req, resp, 10*time.Second); err != nil {
+		if err := this.proxyClient.Do(req, resp); err != nil {
 			this.log.Info("error when proxying the request: %s", err)
 		}
 		if resp.StatusCode() == fasthttp.StatusBadGateway {
@@ -92,7 +92,11 @@ func (this *HttpReproxy) Start() error {
 	this.log.Info("Listen port", this.local_port)
 
 	this.proxyClient = &fasthttp.HostClient{
-		Addr: utils.JoinHostPort(this.remote_host, this.remote_port),
+		Addr:            utils.JoinHostPort(this.remote_host, this.remote_port),
+		MaxConns:        1024,
+		MaxConnDuration: 60 * time.Second,
+		ReadTimeout:     60 * time.Second,
+		WriteTimeout:    60 * time.Second,
 	}
 	err := fasthttp.ListenAndServe(utils.JoinHostPort("", this.local_port), this.reverseProxyHandler)
 	if err != nil {

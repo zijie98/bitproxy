@@ -55,7 +55,7 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 			break
 		}
 	}
-	defer req.ResetBody()
+	//defer req.ResetBody()
 	this.postprocessResponse(resp)
 }
 

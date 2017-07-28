@@ -21,6 +21,8 @@ type HttpReproxy struct {
 	from_name   string
 	log         *utils.Logger
 
+	enable_black bool
+
 	proxyClient *fasthttp.HostClient
 }
 
@@ -57,6 +59,9 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 }
 
 func (this *HttpReproxy) isBlack(addr net.Addr) bool {
+	if this.enable_black == false {
+		return false
+	}
 	ip, _, _ := net.SplitHostPort(addr.String())
 	if libs.Wall.IsBlack(ip) {
 		return true

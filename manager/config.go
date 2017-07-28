@@ -17,10 +17,11 @@ import (
 
 // HTTP 反向代理配置
 type HttpReproxyConfig struct {
-	LocalPort  uint   `json:"local_port"`
-	ServerHost string `json:"server_host"`
-	ServerPort uint   `json:"server_port"`
-	Name       string `json:"name"`
+	LocalPort   uint   `json:"local_port"`
+	ServerHost  string `json:"server_host"`
+	ServerPort  uint   `json:"server_port"`
+	Name        string `json:"name"`
+	EnableBlack bool   `json:"enable_black"`
 }
 
 // TCP/UDP 代理配置

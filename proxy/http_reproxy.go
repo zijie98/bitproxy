@@ -30,6 +30,7 @@ var ReproxyUserAgent = "RKProxy"
 
 func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	this.log.Info(" Client ip", ctx.RemoteIP(), " request url: ", ctx.URI().String())
+
 	if this.enable_black && this.isBlack(ctx.RemoteAddr()) {
 		this.log.Info("Was Black ", ctx.RemoteIP())
 		return

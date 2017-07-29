@@ -12,7 +12,6 @@ import (
 	"os/signal"
 	"runtime"
 
-	"path/filepath"
 	"rkproxy/libs"
 	"rkproxy/manager"
 	"rkproxy/manager/api"

@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"runtime"
 
+	"path/filepath"
 	"rkproxy/libs"
 	"rkproxy/manager"
 	"rkproxy/manager/api"
@@ -28,7 +29,7 @@ var log *utils.Logger = utils.NewLogger("Main")
 
 func listenSignal() {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
+	signal.Notify(c, os.Interrupt)
 	go func() {
 		select {
 		case sig := <-c:
@@ -49,13 +50,16 @@ func initFlag() {
 }
 
 func initPid() {
+	if _, err := os.Stat(pid_path); os.IsExist(err) {
+		os.Remove(pid_path)
+	}
 	file, err := os.OpenFile(pid_path, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("写pid文件错误：", err)
 		return
 	}
 	defer file.Close()
-	file.Write([]byte(fmt.Sprintf("%d", os.Getpid())))
+	file.WriteString(fmt.Sprintf("%d", os.Getpid()))
 }
 
 func initApi(config *manager.ApiConfig) error {

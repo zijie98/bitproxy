@@ -28,7 +28,7 @@ var log *utils.Logger = utils.NewLogger("Main")
 
 func listenSignal() {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, os.Kill)
 	go func() {
 		select {
 		case sig := <-c:
@@ -36,6 +36,7 @@ func listenSignal() {
 			if man != nil {
 				man.StopAll()
 			}
+			os.Remove(pid_path)
 			os.Exit(0)
 		}
 	}()

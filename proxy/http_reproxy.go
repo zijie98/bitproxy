@@ -50,12 +50,13 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 		if resp.StatusCode() == fasthttp.StatusBadGateway {
 			this.log.Info("Response status code 502.. retrying")
 			time.Sleep(2 * time.Second)
+			resp.ResetBody()
 			retry++
 		} else {
 			break
 		}
 	}
-	//defer req.ResetBody()
+	defer req.ResetBody()
 	this.postprocessResponse(resp)
 }
 
@@ -93,7 +94,7 @@ func (this *HttpReproxy) Start() error {
 
 	this.proxyClient = &fasthttp.HostClient{
 		Addr:            utils.JoinHostPort(this.remote_host, this.remote_port),
-		MaxConns:        1024,
+		MaxConns:        512,
 		MaxConnDuration: 60 * time.Second,
 		ReadTimeout:     60 * time.Second,
 		WriteTimeout:    60 * time.Second,

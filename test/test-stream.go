@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	proxy "rkproxy/proxy"
 	"rkproxy/proxy/ss"
 	"time"
 )
 
 func main() {
-	pxy := proxy.NewStreamProxy(ss.TCP_PROTOCOL, 1992, "www.baidu.com", 80)
+	pxy := proxy.NewStreamProxy(ss.TCP_PROTOCOL, 1992, "www.baidu.com", 80, 0)
 	go pxy.Start()
 	time.Sleep(1 * time.Second)
 	fmt.Println("----")
@@ -38,7 +39,9 @@ User-Agent: HHH
 	if n == 512 {
 		pxy.Stop()
 		fmt.Println("stream test is ok")
+		select {}
 	} else {
 		fmt.Println("stream test is fail")
+		os.Exit(1)
 	}
 }

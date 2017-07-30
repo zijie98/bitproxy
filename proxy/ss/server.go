@@ -104,7 +104,7 @@ func (this *SSServer) handle(client net.Conn) {
 		}
 	}
 	limit := &utils.Limiter{Rate: this.rate}
-	var traffic_stats = func(n int) {
+	var traffic_stats = func(n int64) {
 		libs.AddTrafficStats(this.port, n)
 	}
 	go utils.Copy(client, remote, limit, traffic_stats)

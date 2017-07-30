@@ -5,16 +5,10 @@ package proxy
 
 import (
 	"net"
-	"time"
 
-	"io"
 	"rkproxy/libs"
 	"rkproxy/proxy/ss"
 	"rkproxy/utils"
-)
-
-const (
-	DefaultDialTimeout = 5
 )
 
 type StreamProxy struct {
@@ -64,37 +58,47 @@ func (this *StreamProxy) Traffic() (uint64, error) {
 }
 
 func (this *StreamProxy) handle(local_conn net.Conn) {
-	remote_conn, err := net.DialTimeout(
+	defer func() {
+		err := local_conn.Close()
+		if err != nil {
+			this.log.Info("local_conn close error ", err.Error())
+		}
+	}()
+
+	remote_conn, err := net.Dial(
 		string(this.local_net),
 		utils.JoinHostPort(this.remote_host, this.remote_port),
-		DefaultDialTimeout*time.Second,
 	)
 	if err != nil {
-		this.log.Info("Dial remote host fall: ", err)
+		this.log.Info("Dial remote host error: ", err)
 		return
 	}
-	var done = make(chan bool, 2)
+	defer func() {
+		err := remote_conn.Close()
+		if err != nil {
+			this.log.Info("Remote close error ", err.Error())
+		}
+	}()
+
 	var limit = &utils.Limiter{Rate: this.rate}
 
-	var traffic_stats = func(n int) {
+	var traffic_stats = func(n int64) {
 		if this.enable_traffic == false {
 			return
 		}
 		libs.AddTrafficStats(this.local_port, n)
 	}
 
-	var copy_data = func(dsc io.WriteCloser, src io.ReadCloser, l *utils.Limiter) {
+	var done = make(chan bool, 2)
+	var copy_data = func(dsc net.Conn, src net.Conn, l *utils.Limiter, timeout bool) {
 		_, err := utils.Copy(dsc, src, l, traffic_stats)
 		if err != nil {
 			done <- true
 		}
 	}
-	go copy_data(remote_conn, local_conn, limit)
-	go copy_data(local_conn, remote_conn, nil)
-
+	go copy_data(remote_conn, local_conn, limit, false)
+	go copy_data(local_conn, remote_conn, nil, true)
 	<-done
-	local_conn.Close()
-	remote_conn.Close()
 }
 
 func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint, rate uint) *StreamProxy {

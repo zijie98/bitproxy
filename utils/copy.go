@@ -15,17 +15,13 @@ func init() {
 	CopyPool.Init(1*time.Hour, maxNBuf)
 }
 
-type CopyCallbackFunc func(int)
+type CopyCallbackFunc func(int64)
 
 func Copy(dst io.Writer, src io.Reader, limit *Limiter, call CopyCallbackFunc) (written int64, err error) {
 	buf := CopyPool.Get(CopyPoolSize)
 	defer CopyPool.Put(buf)
-
 	for {
-		switch src.(type) {
-		case net.Conn:
-			src.(net.Conn).SetReadDeadline(time.Now().Add(5 * time.Second))
-		}
+		SetTimeout(src, time.Now().Add(60*time.Second))
 		nr, er := src.Read(buf)
 		if nr > 0 {
 			nw, ew := dst.Write(buf[0:nr])
@@ -41,22 +37,28 @@ func Copy(dst io.Writer, src io.Reader, limit *Limiter, call CopyCallbackFunc) (
 				break
 			}
 		}
-		if er == io.EOF {
-			break
-		}
 		if er != nil {
+			//if er == io.EOF {
+			//}
 			err = er
 			break
 		}
+		SetTimeout(src, time.Time{})
 		if limit != nil {
-			limit.Sleep()
-		}
-
-		if call != nil {
-			call(nr)
+			limit.Limit()
 		}
 	}
+	if call != nil {
+		call(written)
+	}
 	return written, err
+}
+
+func SetTimeout(src io.Reader, time time.Time) {
+	switch src.(type) {
+	case net.Conn:
+		src.(net.Conn).SetReadDeadline(time)
+	}
 }
 
 // 1s / (L/B) = sleep
@@ -64,7 +66,7 @@ type Limiter struct {
 	Rate uint // KB/每秒
 }
 
-func (l *Limiter) Sleep() {
+func (l *Limiter) Limit() {
 	if l.Rate <= 0 {
 		return
 	}

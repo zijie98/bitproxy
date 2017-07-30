@@ -11,7 +11,7 @@ import (
 
 type Stats struct {
 	Port    uint
-	Traffic int
+	Traffic int64
 }
 
 var trafficStats = make(chan *Stats, 512)
@@ -27,7 +27,7 @@ func InitRedis(host string, port uint) {
 	StartStats()
 }
 
-func AddTrafficStats(port uint, traffic int) {
+func AddTrafficStats(port uint, traffic int64) {
 	trafficStats <- &Stats{Port: port, Traffic: traffic}
 }
 

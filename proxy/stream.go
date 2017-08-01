@@ -6,7 +6,7 @@ package proxy
 import (
 	"net"
 
-	"rkproxy/libs"
+	"rkproxy/services"
 	"rkproxy/proxy/ss"
 	"rkproxy/utils"
 	"time"
@@ -55,11 +55,11 @@ func (this *StreamProxy) isBlack(addr net.Addr) bool {
 		return false
 	}
 	ip, _, _ := net.SplitHostPort(addr.String())
-	if libs.Wall.IsBlack(ip) {
+	if services.Wall.IsBlack(ip) {
 		this.log.Info("Ip was black ", ip)
 		return true
 	}
-	libs.Filter <- libs.RequestAt{
+	services.Filter <- services.RequestAt{
 		Ip: ip,
 		At: time.Now(),
 	}
@@ -78,7 +78,7 @@ func (this *StreamProxy) LocalPort() uint {
 }
 
 func (this *StreamProxy) Traffic() (uint64, error) {
-	return libs.GetTraffic(this.local_port)
+	return services.GetTraffic(this.local_port)
 }
 
 func (this *StreamProxy) handle(local_conn net.Conn) {
@@ -135,7 +135,7 @@ func (this *StreamProxy) trafficStats(n int64) {
 	if this.enable_traffic == false {
 		return
 	}
-	libs.AddTrafficStats(this.local_port, n)
+	services.AddTrafficStats(this.local_port, n)
 }
 
 // 流量限制

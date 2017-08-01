@@ -8,7 +8,7 @@ import (
 	"net"
 	"time"
 
-	"rkproxy/libs"
+	"rkproxy/services"
 	"rkproxy/utils"
 
 	"github.com/valyala/fasthttp"
@@ -65,10 +65,10 @@ func (this *HttpReproxy) isBlack(addr net.Addr) bool {
 		return false
 	}
 	ip, _, _ := net.SplitHostPort(addr.String())
-	if libs.Wall.IsBlack(ip) {
+	if services.Wall.IsBlack(ip) {
 		return true
 	}
-	libs.Filter <- libs.RequestAt{
+	services.Filter <- services.RequestAt{
 		Ip: ip,
 		At: time.Now(),
 	}

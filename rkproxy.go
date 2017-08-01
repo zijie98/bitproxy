@@ -12,7 +12,7 @@ import (
 	"os/signal"
 	"runtime"
 
-	"rkproxy/libs"
+	"rkproxy/services"
 	"rkproxy/manager"
 	"rkproxy/manager/api"
 	"rkproxy/utils"
@@ -72,16 +72,16 @@ func initApi() error {
 func initRedis() {
 	if manager.Man.Config().Redis != nil {
 		config := manager.Man.Config().Redis
-		libs.InitRedis(config.Host, config.Port)
+		services.InitRedis(config.Host, config.Port)
 	}
 }
 
 func initStats() {
-	libs.StartStats()
+	services.StartStats()
 }
 
 func initBlackList() {
-	libs.StartBlackList()
+	services.StartBlackList()
 }
 
 func main() {

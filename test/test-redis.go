@@ -5,17 +5,17 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
-	"rkproxy/libs"
+	"rkproxy/services"
 	"rkproxy/utils"
 )
 
 func main() {
-	libs.RedisPool = &redis.Pool{
+	services.RedisPool = &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
 		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", utils.JoinHostPort("127.0.0.1", 6379)) },
 	}
-	conn := libs.RedisPool.Get()
+	conn := services.RedisPool.Get()
 	key := "test-hash"
 	conn.Send("HSET", key, "123.123.123.123", 1)
 	conn.Send("HSET", key, "321.123.123.123", 2)

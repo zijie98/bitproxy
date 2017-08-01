@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"gopkg.in/gin-gonic/gin.v1"
-	"rkproxy/libs"
+	"rkproxy/services"
 )
 
 type BlackPost struct {
@@ -20,7 +20,7 @@ func CreateBlack(ctx *gin.Context) {
 		return
 	}
 	for _, ip := range ips.Ips {
-		libs.Wall.Black(ip)
+		services.Wall.Black(ip)
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
@@ -37,7 +37,7 @@ func ActionBlack(ctx *gin.Context) {
 	switch action {
 	case "remove":
 		for _, ip := range ips.Ips {
-			libs.Wall.Remove(ip)
+			services.Wall.Remove(ip)
 		}
 	default:
 		err = errors.New("not found action")

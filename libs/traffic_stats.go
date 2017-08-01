@@ -3,10 +3,6 @@ package libs
 import (
 	"fmt"
 	"strconv"
-	"time"
-
-	"github.com/garyburd/redigo/redis"
-	"rkproxy/utils"
 )
 
 type Stats struct {
@@ -16,16 +12,6 @@ type Stats struct {
 
 var trafficStats = make(chan *Stats, 512)
 var deleteTrafficStats = make(chan *Stats, 128)
-var RedisPool *redis.Pool
-
-func InitRedis(host string, port uint) {
-	RedisPool = &redis.Pool{
-		MaxIdle:     3,
-		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", utils.JoinHostPort(host, port)) },
-	}
-	StartStats()
-}
 
 func AddTrafficStats(port uint, traffic int64) {
 	trafficStats <- &Stats{Port: port, Traffic: traffic}

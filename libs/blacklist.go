@@ -37,15 +37,13 @@ type BlackWall struct {
 
 	max_limit   int
 	max_between int64
-
-	done chan bool
-
-	mtx sync.Mutex
+	done        chan bool
+	mtx         sync.Mutex
 }
 
 var Wall *BlackWall
 
-func init() {
+func StartBlackList() {
 	if Wall == nil {
 		Wall = &BlackWall{
 			max_limit:   MAX_LIMIT,
@@ -53,8 +51,8 @@ func init() {
 			runtimes:    make(map[string]*list.List),
 			blacks:      make(map[string]bool),
 		}
-		Wall.Start()
 	}
+	Wall.Start()
 }
 
 func (r *BlackWall) Start() {

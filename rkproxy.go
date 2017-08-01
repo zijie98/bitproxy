@@ -61,20 +61,31 @@ func initPid() {
 	file.WriteString(fmt.Sprintf("%d", os.Getpid()))
 }
 
-func initApi(config *manager.ApiConfig) error {
-	return api.Start(config.Password, config.Port)
+func initApi() error {
+	if manager.Man.Config().Api != nil {
+		config := manager.Man.Config().Api
+		return api.Start(config.Password, config.Port)
+	}
+	return nil
 }
 
-func initRedis(config *manager.RedisConfig) {
-	libs.InitRedis(config.Host, config.Port)
+func initRedis() {
+	if manager.Man.Config().Redis != nil {
+		config := manager.Man.Config().Redis
+		libs.InitRedis(config.Host, config.Port)
+	}
+}
+
+func initStats() {
+	libs.StartStats()
+}
+
+func initBlackList() {
+	libs.StartBlackList()
 }
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	initFlag()
-	initPid()
-	listenSignal()
 
 	manager.New(config_path)
 
@@ -84,19 +95,16 @@ func main() {
 		return
 	}
 
+	initFlag()
+	initPid()
+	listenSignal()
+
+	initRedis()
+	initStats()
+	initBlackList()
+
 	manager.Man.RunAll()
 
-	if manager.Man.Config().Redis != nil {
-		initRedis(manager.Man.Config().Redis)
-	}
-
-	if manager.Man.Config().Api != nil {
-		err = initApi(manager.Man.Config().Api)
-		if err != nil {
-			log.Info(err.Error())
-			return
-		}
-	}
-
+	initApi()
 	select {}
 }

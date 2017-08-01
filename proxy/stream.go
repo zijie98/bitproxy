@@ -9,7 +9,10 @@ import (
 	"rkproxy/libs"
 	"rkproxy/proxy/ss"
 	"rkproxy/utils"
+	"time"
 )
+
+const READ_TIMEOUT = 60
 
 type StreamProxy struct {
 	local_port     uint
@@ -18,6 +21,7 @@ type StreamProxy struct {
 	remote_port    uint
 	rate           uint
 	enable_traffic bool
+	enable_black   bool
 
 	ln  net.Listener
 	log *utils.Logger
@@ -37,9 +41,29 @@ func (this *StreamProxy) Start() (err error) {
 			continue
 		}
 		this.log.Info("Client ip", conn.RemoteAddr().String())
+		if this.isBlack(conn.RemoteAddr()) {
+			conn.Close()
+			continue
+		}
 		go this.handle(conn)
 	}
 	return nil
+}
+
+func (this *StreamProxy) isBlack(addr net.Addr) bool {
+	if !this.enable_black {
+		return false
+	}
+	ip, _, _ := net.SplitHostPort(addr.String())
+	if libs.Wall.IsBlack(ip) {
+		this.log.Info("Ip was black ", ip)
+		return true
+	}
+	libs.Filter <- libs.RequestAt{
+		Ip: ip,
+		At: time.Now(),
+	}
+	return false
 }
 
 func (this *StreamProxy) Stop() error {
@@ -58,6 +82,8 @@ func (this *StreamProxy) Traffic() (uint64, error) {
 }
 
 func (this *StreamProxy) handle(local_conn net.Conn) {
+	var done = make(chan bool, 2)
+
 	defer func() {
 		err := local_conn.Close()
 		if err != nil {
@@ -80,25 +106,43 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 		}
 	}()
 
-	var limit = &utils.Limiter{Rate: this.rate}
-
-	var traffic_stats = func(n int64) {
-		if this.enable_traffic == false {
-			return
+	// 读取到数据后的callback
+	var read_notify = make(utils.ReadNotify, 5)
+	go func() {
+		for {
+			select {
+			case <-time.After(READ_TIMEOUT * time.Second):
+				this.log.Info("Timeout")
+				done <- true
+			case <-read_notify:
+			}
 		}
-		libs.AddTrafficStats(this.local_port, n)
-	}
+	}()
 
-	var done = make(chan bool, 2)
-	var copy_data = func(dsc net.Conn, src net.Conn, l *utils.Limiter, timeout bool) {
-		_, err := utils.Copy(dsc, src, l, traffic_stats)
+	var copy_data = func(dsc net.Conn, src net.Conn, limit *utils.Limiter) {
+		_, err := utils.Copy(dsc, src, &read_notify, limit, this.trafficStats)
 		if err != nil {
 			done <- true
 		}
 	}
-	go copy_data(remote_conn, local_conn, limit, false)
-	go copy_data(local_conn, remote_conn, nil, true)
+	go copy_data(remote_conn, local_conn, nil)
+	go copy_data(local_conn, remote_conn, this.Limit())
 	<-done
+}
+
+// 流量统计
+func (this *StreamProxy) trafficStats(n int64) {
+	if this.enable_traffic == false {
+		return
+	}
+	libs.AddTrafficStats(this.local_port, n)
+}
+
+// 流量限制
+func (this *StreamProxy) Limit() *utils.Limiter {
+	return &utils.Limiter{
+		Rate: this.rate,
+	}
 }
 
 func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint, rate uint) *StreamProxy {

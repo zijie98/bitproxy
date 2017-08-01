@@ -107,8 +107,8 @@ func (this *SSServer) handle(client net.Conn) {
 	var traffic_stats = func(n int64) {
 		libs.AddTrafficStats(this.port, n)
 	}
-	go utils.Copy(client, remote, limit, traffic_stats)
-	utils.Copy(remote, client, nil, nil)
+	go utils.Copy(client, remote, nil, limit, traffic_stats)
+	utils.Copy(remote, client, nil, nil, nil)
 }
 
 func (this *SSServer) initListen() (err error) {

@@ -16,13 +16,17 @@ func init() {
 }
 
 type CopyCallbackFunc func(int64)
+type ReadNotify chan int
 
-func Copy(dst io.Writer, src io.Reader, limit *Limiter, call CopyCallbackFunc) (written int64, err error) {
+func Copy(dst io.Writer, src io.Reader, notify *ReadNotify, limit *Limiter, call CopyCallbackFunc) (written int64, err error) {
 	buf := CopyPool.Get(CopyPoolSize)
 	defer CopyPool.Put(buf)
 	for {
-		SetTimeout(src, time.Now().Add(60*time.Second))
+		//SetTimeout(src, time.Now().Add(60*time.Second))
 		nr, er := src.Read(buf)
+		if notify != nil {
+			*notify <- nr
+		}
 		if nr > 0 {
 			nw, ew := dst.Write(buf[0:nr])
 			if nw > 0 {
@@ -43,7 +47,7 @@ func Copy(dst io.Writer, src io.Reader, limit *Limiter, call CopyCallbackFunc) (
 			err = er
 			break
 		}
-		SetTimeout(src, time.Time{})
+		//SetTimeout(src, time.Time{})
 		if limit != nil {
 			limit.Limit()
 		}

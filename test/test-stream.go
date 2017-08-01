@@ -37,7 +37,7 @@ User-Agent: HHH
 	n, err = io.ReadFull(conn, buff)
 
 	if n == 512 {
-		pxy.Stop()
+		//pxy.Stop()
 		fmt.Println("stream test is ok")
 		select {}
 	} else {

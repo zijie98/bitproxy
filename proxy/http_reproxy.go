@@ -75,13 +75,14 @@ func (this *HttpReproxy) isBlack(addr net.Addr) bool {
 	return false
 }
 
-func (this *HttpReproxy) prepareRequest(req *fasthttp.Request) {
+func (this *HttpReproxy) prepareRequest(req *fasthttp.Request, ctx *fasthttp.RequestCtx) {
 	// do not proxy "Connection" header.
 	req.Header.Del("Connection")
 	if len(req.Header.UserAgent()) <= 1 {
 		req.Header.Set("User-Agent", ReproxyUserAgent)
 	}
 	req.Header.Set("From", this.from_name)
+	req.Header.Set("X-Forwarded-For", ctx.RemoteIP().String())
 }
 
 func (this *HttpReproxy) postprocessResponse(resp *fasthttp.Response) {

@@ -8,6 +8,7 @@ package libs
 
 import (
 	"container/list"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -17,6 +18,10 @@ const (
 	MAX_LIMIT   = 20 // MAX_BETWEEN时间内的请求量
 
 	MAX_FILTER_LIMIT = 200
+)
+
+const (
+	hash_key = "BLACK@IPS"
 )
 
 type RequestAt struct {
@@ -53,6 +58,7 @@ func init() {
 }
 
 func (r *BlackWall) Start() {
+	r.initBlack()
 	go func() {
 		for {
 			select {
@@ -85,8 +91,24 @@ func (r *BlackWall) AddIp(ip RequestAt) {
 	r.check(ip)
 }
 
+// TODO 将ip添加到redis中，每次启动从redis中初始化已经拉黑的ip
 func (r *BlackWall) Black(ip string) {
+	conn := RedisPool.Get()
+	conn.Send("HSET", hash_key, ip, 1)
+
 	r.blacks[ip] = true
+}
+
+func (r *BlackWall) initBlack() error {
+	conn := RedisPool.Get()
+	reply, err := conn.Do("HKEYS", hash_key)
+	if err != nil {
+		return err
+	}
+	for _, ip := range reply.([]interface{}) {
+		r.Black(fmt.Sprintf("%s", ip))
+	}
+	return nil
 }
 
 func (r *BlackWall) IsBlack(ip string) bool {

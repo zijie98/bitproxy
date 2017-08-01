@@ -1,12 +1,12 @@
 package libs
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 
-	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"rkproxy/utils"
-	"strconv"
 )
 
 type Stats struct {

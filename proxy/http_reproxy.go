@@ -41,7 +41,7 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	req := &ctx.Request
 	resp := &ctx.Response
 
-	this.prepareRequest(req)
+	this.prepareRequest(req, ctx)
 
 	for retry < retry_count {
 		if err := this.proxyClient.Do(req, resp); err != nil {

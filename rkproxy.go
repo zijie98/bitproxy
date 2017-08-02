@@ -12,9 +12,9 @@ import (
 	"os/signal"
 	"runtime"
 
-	"rkproxy/services"
 	"rkproxy/manager"
 	"rkproxy/manager/api"
+	"rkproxy/services"
 	"rkproxy/utils"
 )
 
@@ -86,6 +86,7 @@ func initBlackList() {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	initFlag()
 
 	manager.New(config_path)
 
@@ -95,7 +96,6 @@ func main() {
 		return
 	}
 
-	initFlag()
 	initPid()
 	listenSignal()
 

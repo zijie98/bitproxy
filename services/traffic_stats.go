@@ -61,12 +61,18 @@ func StartStats() {
 
 // 持久化
 func persistent() {
-	conn := RedisPool.Get()
+	conn, err := getRedisConn()
+	if err != nil {
+		return
+	}
 	conn.Send("SAVE")
 }
 
 func getTraffic(port uint) (uint64, error) {
-	conn := RedisPool.Get()
+	conn, err := getRedisConn()
+	if err != nil {
+		return 0, err
+	}
 	key := statsKey(port)
 	reply, err := conn.Do("GET", key)
 	if err != nil {
@@ -76,14 +82,20 @@ func getTraffic(port uint) (uint64, error) {
 }
 
 func statsToRedis(s *Stats) error {
-	conn := RedisPool.Get()
+	conn, err := getRedisConn()
+	if err != nil {
+		return err
+	}
 	key := statsKey(s.Port)
 	return conn.Send("INCRBY", key, s.Traffic)
 }
 
 func deleteFromTheRedis(s *Stats) error {
+	conn, err := getRedisConn()
+	if err != nil {
+		return err
+	}
 	key := statsKey(s.Port)
-	conn := RedisPool.Get()
 	return conn.Send("DEL", key)
 }
 

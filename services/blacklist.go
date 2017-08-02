@@ -91,14 +91,20 @@ func (r *BlackWall) AddIp(ip RequestAt) {
 
 // TODO 将ip添加到redis中，每次启动从redis中初始化已经拉黑的ip
 func (r *BlackWall) Black(ip string) {
-	conn := RedisPool.Get()
+	conn, err := getRedisConn()
+	if err != nil {
+		return
+	}
 	conn.Send("HSET", hash_key, ip, 1)
 
 	r.blacks[ip] = true
 }
 
 func (r *BlackWall) initBlack() error {
-	conn := RedisPool.Get()
+	conn, err := getRedisConn()
+	if err != nil {
+		return err
+	}
 	reply, err := conn.Do("HKEYS", hash_key)
 	if err != nil {
 		return err

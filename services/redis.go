@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -16,4 +17,11 @@ func InitRedis(host string, port uint) {
 		IdleTimeout: 240 * time.Second,
 		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", utils.JoinHostPort(host, port)) },
 	}
+}
+
+func getRedisConn() (redis.Conn, error) {
+	if RedisPool == nil {
+		return nil, errors.New("Redis not init")
+	}
+	return RedisPool.Get(), nil
 }

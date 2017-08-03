@@ -99,7 +99,7 @@ func (this *HttpReproxy) Start() error {
 	this.proxyClient = &fasthttp.HostClient{
 		Addr:            utils.JoinHostPort(this.remote_host, this.remote_port),
 		MaxConns:        512,
-		MaxConnDuration: 60 * time.Second,
+		MaxConnDuration: 20 * time.Second,
 		ReadTimeout:     60 * time.Second,
 		WriteTimeout:    60 * time.Second,
 	}

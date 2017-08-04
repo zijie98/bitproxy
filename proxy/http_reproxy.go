@@ -76,7 +76,6 @@ func (this *HttpReproxy) isBlack(addr net.Addr) bool {
 }
 
 func (this *HttpReproxy) prepareRequest(req *fasthttp.Request, ctx *fasthttp.RequestCtx) {
-	// do not proxy "Connection" header.
 	req.Header.Del("Connection")
 	if len(req.Header.UserAgent()) <= 1 {
 		req.Header.Set("User-Agent", ReproxyUserAgent)
@@ -86,9 +85,7 @@ func (this *HttpReproxy) prepareRequest(req *fasthttp.Request, ctx *fasthttp.Req
 }
 
 func (this *HttpReproxy) postprocessResponse(resp *fasthttp.Response) {
-	// do not proxy "Connection" header
 	resp.Header.Del("Connection")
-
 	resp.Header.Set("Server", ReproxyUserAgent)
 	resp.Header.Set("From", this.from_name)
 }
@@ -97,13 +94,21 @@ func (this *HttpReproxy) Start() error {
 	this.log.Info("Listen port", this.local_port)
 
 	this.proxyClient = &fasthttp.HostClient{
-		Addr:            utils.JoinHostPort(this.remote_host, this.remote_port),
-		MaxConns:        512,
-		MaxConnDuration: 20 * time.Second,
-		ReadTimeout:     60 * time.Second,
-		WriteTimeout:    60 * time.Second,
+		Addr: utils.JoinHostPort(this.remote_host, this.remote_port),
+		//MaxConns:        512,
+		//MaxConnDuration: 60 * time.Second,
+		//ReadTimeout:     60 * time.Second,
+		//WriteTimeout:    60 * time.Second,
 	}
-	err := fasthttp.ListenAndServe(utils.JoinHostPort("", this.local_port), this.reverseProxyHandler)
+
+	s := &fasthttp.Server{
+		Handler:              this.reverseProxyHandler,
+		MaxKeepaliveDuration: 60 * time.Second,
+		ReadTimeout:          60 * 3 * time.Second,
+		WriteTimeout:         60 * 3 * time.Second,
+		MaxConnsPerIP:        30,
+	}
+	err := s.ListenAndServe(utils.JoinHostPort("", this.local_port))
 	if err != nil {
 		this.log.Info("HttpReverseProxy: ListenAndServe: ", err)
 		return err

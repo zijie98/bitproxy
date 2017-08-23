@@ -71,6 +71,11 @@ func (this *Manager) ParseConfig() (err error) {
 			this.CreateSsServer(&cfg)
 		}
 	}
+	if Config.FtpProxy != nil {
+		for _, cfg := range Config.FtpProxy {
+			this.CreateFtpProxy(&cfg)
+		}
+	}
 	return
 }
 
@@ -146,6 +151,13 @@ func (this *Manager) CreateSsServer(config *SsServerConfig) ProxyHandler {
 //
 func (this *Manager) CreateHttpReproxy(config *HttpReproxyConfig) ProxyHandler {
 	handle := NewHttpReproxy(config)
+	this.handles[config.LocalPort] = handle
+	return handle
+}
+
+// 创建ftp代理
+func (this *Manager) CreateFtpProxy(config *FtpProxyConfig) ProxyHandler {
+	handle := NewFtpProxy(config)
 	this.handles[config.LocalPort] = handle
 	return handle
 }

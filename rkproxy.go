@@ -84,6 +84,13 @@ func initBlackList() {
 	services.StartBlackList()
 }
 
+func initPublicIp() {
+	_, err := utils.PublicIp()
+	if err != nil {
+		fmt.Println("初始化公网IP出错（用于ftp代理）")
+	}
+}
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	initFlag()
@@ -102,6 +109,7 @@ func main() {
 	initRedis()
 	initStats()
 	initBlackList()
+	initPublicIp()
 
 	manager.Man.RunAll()
 

@@ -15,20 +15,48 @@ func init() {
 	CopyPool.Init(1*time.Hour, maxNBuf)
 }
 
-type CopyCallbackFunc func(int64)
-type ReadNotify chan int
+type AfterCallbackFunc func(int64, error)
+type BeforeCallBackFunc func()
+type ReadNotify chan int64
 
-func Copy(dst io.Writer, src io.Reader, notify *ReadNotify, limit *Limiter, call CopyCallbackFunc) (written int64, err error) {
+func CopyWithBefore(dst io.Writer, src io.Reader, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc) (written int64, err error) {
+	return Copy(dst, src, nil, beforeReadFunc, beforeWriteFunc, nil, nil, nil)
+}
+
+func CopyWithAfter(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc) (written int64, err error) {
+	return Copy(dst, src, nil, nil, nil, afterReadFunc, afterWriteFunc, nil)
+}
+
+func CopyWithNone(dst io.Writer, src io.Reader) (written int64, err error) {
+	return Copy(dst, src, nil, nil, nil, nil, nil, nil)
+}
+
+func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc, exitedFunc AfterCallbackFunc) (written int64, err error) {
 	buf := CopyPool.Get(CopyPoolSize)
 	defer CopyPool.Put(buf)
+	defer func() {
+		if exitedFunc != nil {
+			exitedFunc(written, err)
+		}
+	}()
 	for {
 		//SetTimeout(src, time.Now().Add(60*time.Second))
+		if beforeReadFunc != nil {
+			beforeReadFunc()
+		}
 		nr, er := src.Read(buf)
-		if notify != nil {
-			*notify <- nr
+		if afterReadFunc != nil {
+			afterReadFunc(int64(nr), er)
 		}
 		if nr > 0 {
+			if beforeWriteFunc != nil {
+				beforeWriteFunc()
+			}
+			//fmt.Println(string(buf[0:nr]))
 			nw, ew := dst.Write(buf[0:nr])
+			if afterWriteFunc != nil {
+				afterWriteFunc(int64(nw), ew)
+			}
 			if nw > 0 {
 				written += int64(nw)
 			}
@@ -52,9 +80,6 @@ func Copy(dst io.Writer, src io.Reader, notify *ReadNotify, limit *Limiter, call
 			limit.Limit()
 		}
 	}
-	if call != nil {
-		call(written)
-	}
 	return written, err
 }
 
@@ -66,11 +91,11 @@ func SetTimeout(src io.Reader, time time.Time) {
 }
 
 // 1s / (L/B) = sleep
-type Limiter struct {
+type Limit struct {
 	Rate uint // KB/每秒
 }
 
-func (l *Limiter) Limit() {
+func (l *Limit) Limit() {
 	if l.Rate <= 0 {
 		return
 	}

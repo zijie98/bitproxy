@@ -16,8 +16,7 @@ func NewLogger(prefix string) *Logger {
 }
 
 func (this *Logger) Info(msg ...interface{}) {
-	fmt.Print(time.Now().Format("2006-01-02 15:04:05"), " - ")
-	fmt.Print(this.prefix)
-	fmt.Print("-")
-	fmt.Println(msg...)
+	at := time.Now().Format("2006-01-02 15:04:05")
+	line := fmt.Sprintf("%s - %s -", at, this.prefix)
+	fmt.Println(line, msg)
 }

@@ -5,11 +5,11 @@ package proxy
 
 import (
 	"net"
-
-	"rkproxy/services"
-	"rkproxy/proxy/ss"
-	"rkproxy/utils"
 	"time"
+
+	"rkproxy/proxy/ss"
+	"rkproxy/services"
+	"rkproxy/utils"
 )
 
 const READ_TIMEOUT = 60
@@ -106,7 +106,7 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 		}
 	}()
 
-	// 读取到数据后的callback
+	// 读取到数据后通知、相当于超时机制
 	var read_notify = make(utils.ReadNotify, 5)
 	go func() {
 		for {
@@ -114,13 +114,18 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 			case <-time.After(READ_TIMEOUT * time.Second):
 				this.log.Info("Timeout")
 				done <- true
+				return
 			case <-read_notify:
+				break
 			}
 		}
 	}()
+	readAfterFunc := func(n int64, e error) {
+		read_notify <- n
+	}
 
-	var copy_data = func(dsc net.Conn, src net.Conn, limit *utils.Limiter) {
-		_, err := utils.Copy(dsc, src, &read_notify, limit, this.trafficStats)
+	var copy_data = func(dsc net.Conn, src net.Conn, limit *utils.Limit) {
+		_, err := utils.Copy(dsc, src, limit, nil, nil, readAfterFunc, nil, this.trafficStats)
 		if err != nil {
 			done <- true
 		}
@@ -131,7 +136,7 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 }
 
 // 流量统计
-func (this *StreamProxy) trafficStats(n int64) {
+func (this *StreamProxy) trafficStats(n int64, e error) {
 	if this.enable_traffic == false {
 		return
 	}
@@ -139,8 +144,8 @@ func (this *StreamProxy) trafficStats(n int64) {
 }
 
 // 流量限制
-func (this *StreamProxy) Limit() *utils.Limiter {
-	return &utils.Limiter{
+func (this *StreamProxy) Limit() *utils.Limit {
+	return &utils.Limit{
 		Rate: this.rate,
 	}
 }

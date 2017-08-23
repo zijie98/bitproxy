@@ -65,11 +65,18 @@ type RedisConfig struct {
 	Host string `json:"host" default:"127.0.0.1"`
 }
 
+type FtpProxyConfig struct {
+	LocalPort  uint   `json:"local_port"`
+	ServerPort uint   `json:"server_port"`
+	ServerHost string `json:"server_host"`
+}
+
 type ProxyConfig struct {
 	Api         *ApiConfig          `json:"api"`
 	Redis       *RedisConfig        `json:"redis"`
 	Stream      []StreamProxyConfig `json:"stream"`
 	HttpReproxy []HttpReproxyConfig `json:"http_reproxy"`
+	FtpProxy    []FtpProxyConfig    `json:"ftp_proxy"`
 
 	SsClient *SsClientConfig  `json:"ss_client"`
 	SsServer []SsServerConfig `json:"ss_server"`

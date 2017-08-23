@@ -67,6 +67,10 @@ type SsServerHandle struct {
 	Handle
 }
 
+type FtpProxyHandle struct {
+	Handle
+}
+
 func NewStreamProxy(config *StreamProxyConfig) *StreamProxyHandle {
 	pxy := proxy.NewStreamProxy(
 		ss.NetProtocol(config.LocalNet),
@@ -127,6 +131,21 @@ func NewHttpReproxy(config *HttpReproxyConfig) *HttpReproxyHandle {
 		config.Name,
 	)
 	handle := &HttpReproxyHandle{
+		Handle: Handle{
+			Config: config,
+			Proxy:  pxy,
+		},
+	}
+	return handle
+}
+
+func NewFtpProxy(config *FtpProxyConfig) *FtpProxyHandle {
+	pxy := proxy.NewFtpProxy(
+		config.LocalPort,
+		config.ServerHost,
+		config.ServerPort,
+	)
+	handle := &FtpProxyHandle{
 		Handle: Handle{
 			Config: config,
 			Proxy:  pxy,

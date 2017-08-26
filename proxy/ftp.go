@@ -3,7 +3,6 @@ package proxy
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"net"
 	"regexp"
 	"strconv"
@@ -161,6 +160,14 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 		var pasv_server_conn net.Conn
 		var pasv_client_conn net.Conn
 		remote := bufio.NewReader(remote_conn)
+		defer func() {
+			if pasv_server_conn != nil {
+				pasv_server_conn.Close()
+			}
+			if pasv_client_conn != nil {
+				pasv_client_conn.Close()
+			}
+		}()
 		for {
 			// remote -> self -> local
 			str, err := remote.ReadBytes('\n')
@@ -197,17 +204,21 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 					if command_mark.lastIsDownload() {
 						go func() {
 							_, e := utils.CopyWithAfter(pasv_client_conn, pasv_server_conn, notify, notify)
-							if e == io.EOF {
+							if e != nil {
 								pasv_server_conn.Close()
+								pasv_server_conn = nil
 								pasv_client_conn.Close()
+								pasv_client_conn = nil
 							}
 						}()
 					} else {
 						go func() {
 							_, e := utils.CopyWithAfter(pasv_server_conn, pasv_client_conn, notify, notify)
-							if e == io.EOF {
+							if e != nil {
 								pasv_server_conn.Close()
+								pasv_server_conn = nil
 								pasv_client_conn.Close()
+								pasv_client_conn = nil
 							}
 						}()
 					}

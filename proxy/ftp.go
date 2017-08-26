@@ -37,14 +37,82 @@ func (r *FtpReturn) IsPassiveMode() bool {
 	return false
 }
 
+func (c *FtpReturn) IsOpening() bool {
+	if c.Code == OPENING {
+		return true
+	}
+	return false
+}
+
+type FtpCommand struct {
+	Command string
+	Params  string
+}
+
 const (
-	PASV = 227
-	EPSV = 229
-	QUIT = 221
+	download = iota
+	upload
+)
+
+type FtpCommandFlag struct {
+	uploadOrDownload int
+}
+
+func (c *FtpCommandFlag) lastIsUpload() bool {
+	if c.uploadOrDownload == upload {
+		return true
+	}
+	return false
+}
+func (c *FtpCommandFlag) lastIsDownload() bool {
+	if c.uploadOrDownload == download {
+		return true
+	}
+	return false
+}
+func (c *FtpCommandFlag) Mark(command *FtpCommand) {
+	if command.isUpload() {
+		c.uploadOrDownload = upload
+	} else if command.isDownload() {
+		c.uploadOrDownload = download
+	}
+}
+
+func (c *FtpCommand) isUpload() bool {
+	if c.Command == C_STOR {
+		return true
+	}
+	return false
+}
+
+func (c *FtpCommand) isDownload() bool {
+	if c.Command == C_RETR {
+		return true
+	}
+	return false
+}
+
+func (c *FtpCommand) isQuit() bool {
+	if c.Command == C_QUIT {
+		return true
+	}
+	return false
+}
+
+const (
+	PASV    = 227
+	EPSV    = 229
+	QUIT    = 221
+	OPENING = 150
+
+	C_STOR = "STOR"
+	C_RETR = "RETR"
+	C_QUIT = "QUIT"
 )
 
 var errQuit = errors.New("Quit")
 var errNotMatch = errors.New("Not match to the returned")
+var errCommand = errors.New("Error command")
 
 func (this *FtpProxy) handle(local_conn net.Conn) {
 	defer func() {
@@ -68,66 +136,129 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 
 	var read_notify = make(utils.ReadNotify)
 	var done = make(chan bool, 5)
-	//var rwMu sync.WaitGroup
+	var command_mark FtpCommandFlag
 
-	copy_data := func(dsc io.Writer, src io.Reader) {
-		_, err := utils.CopyWithNone(dsc, src)
-		if err != nil {
-			done <- true
-		}
+	finish := func() {
+		done <- true
+	}
+	notify := func(n int64, err error) {
+		read_notify <- n
 	}
 
 	go func() {
 		for {
 			select {
 			case <-time.After(60 * 2 * time.Second):
-				done <- true
+				finish()
 				return
 			case <-read_notify:
 			}
 		}
 	}()
 
-	// remote -> self -> local
 	go func() {
+		var pasv_resp *FtpReturn
+		var pasv_server_conn net.Conn
+		var pasv_client_conn net.Conn
 		remote := bufio.NewReader(remote_conn)
 		for {
+			// remote -> self -> local
 			str, err := remote.ReadBytes('\n')
 			if err != nil {
-				if len(str) == 0 {
-					break
-				}
+				break
 			}
-			resp, str, err := this.parseResult(str, read_notify)
-			//fmt.Println("- ", string(str))
+			read_notify <- 0
+			resp, str, err := this.parseResult(str)
 			if err != nil && err != errNotMatch {
 				this.log.Info("Parse return error: ", err)
 				if err == errQuit {
-					done <- true
+					finish()
 					return
 				}
 				continue
 			}
-			if resp != nil && resp.IsPassiveMode() {
-				go this.pasvHandle(resp, read_notify)
-				time.Sleep(1 * time.Second)
+			if resp != nil {
+				if resp.IsPassiveMode() {
+					pasv_resp = resp
+					go func() {
+						pasv_client_conn, err = this.listenPasvConnFromClient(resp)
+						if err != nil {
+							this.log.Info("Lisent client conn error :", err)
+							return
+						}
+						pasv_server_conn, err = this.dialToServer(resp)
+						if err != nil {
+							this.log.Info("Dial to pasv ftp server error: ", err)
+							return
+						}
+					}()
+				}
+				if pasv_resp != nil && resp.IsOpening() {
+					if command_mark.lastIsDownload() {
+						go func() {
+							_, e := utils.CopyWithAfter(pasv_client_conn, pasv_server_conn, notify, notify)
+							if e == io.EOF {
+								pasv_server_conn.Close()
+								pasv_client_conn.Close()
+							}
+						}()
+					} else {
+						go func() {
+							_, e := utils.CopyWithAfter(pasv_server_conn, pasv_client_conn, notify, notify)
+							if e == io.EOF {
+								pasv_server_conn.Close()
+								pasv_client_conn.Close()
+							}
+						}()
+					}
+				}
 			}
 			local_conn.Write(str)
 		}
 	}()
 
-	// local -> self -> remote
-	go copy_data(remote_conn, local_conn)
+	go func() {
+		local := bufio.NewReader(local_conn)
+		for {
+			// local -> self -> remote
+			str, err := local.ReadBytes('\n')
+			if err != nil {
+				break
+			}
+			command, err := this.parseCommand(str)
+			if err != nil {
+				this.log.Info("Parse command error ", err)
+				continue
+			}
+			command_mark.Mark(command)
+			remote_conn.Write(str)
+		}
+	}()
+	//go copy_data(remote_conn, local_conn)
 
 	<-done
 	this.log.Info("exit .. ", local_conn.RemoteAddr().String())
 }
 
-func (this *FtpProxy) parseResult(b []byte, read_notify utils.ReadNotify) (resp *FtpReturn, src []byte, err error) {
+func (this *FtpProxy) parseCommand(b []byte) (command *FtpCommand, err error) {
+	c := strings.Split(string(b), " ")
+	command = &FtpCommand{}
+	if len(c) == 0 {
+		return nil, errCommand
+	}
+	if len(c) >= 1 {
+		command.Command = c[0] //strings.TrimSpace(c[0])
+	}
+	if len(c) >= 2 {
+		command.Params = c[1]
+	}
+	return command, nil
+}
+
+func (this *FtpProxy) parseResult(b []byte) (resp *FtpReturn, src []byte, err error) {
 	src = b
 	resp, err = this.parseFtpRetrun(string(src))
 	if err != nil {
-		//this.log.Info("Get code error: ", err)
 		return nil, nil, err
 	}
 	switch resp.Code {
@@ -156,39 +287,18 @@ func (this *FtpProxy) dialToServer(pasv *FtpReturn) (conn net.Conn, err error) {
 	return
 }
 
-func (this *FtpProxy) pasvHandle(resp *FtpReturn, notify utils.ReadNotify) {
+func (this *FtpProxy) listenPasvConnFromClient(resp *FtpReturn) (client_conn net.Conn, err error) {
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", resp.Port))
 	if err != nil {
 		this.log.Info("Pasv listen error ", err)
 		return
 	}
-	client_conn, err := ln.Accept()
+	client_conn, err = ln.Accept()
 	if err != nil {
 		this.log.Info("Accept client error : ", err)
-		if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
-			time.Sleep(100 * time.Millisecond)
-			this.log.Info("Accept client again! ", nerr)
-		} else {
-			return
-		}
+		//if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
 	}
-	defer func() {
-		client_conn.Close()
-	}()
-
-	pasv_conn, err := this.dialToServer(resp)
-	if err != nil {
-		this.log.Info("Dial to pasv ftp server error: ", err)
-		return
-	}
-	defer func() {
-		pasv_conn.Close()
-	}()
-
-	callback := func() {
-		notify <- 0
-	}
-	utils.CopyWithBefore(client_conn, pasv_conn, nil, callback)
+	return
 }
 
 func (this *FtpProxy) parseFtpRetrun(str string) (ret *FtpReturn, err error) {

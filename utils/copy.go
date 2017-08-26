@@ -20,18 +20,22 @@ type BeforeCallBackFunc func()
 type ReadNotify chan int64
 
 func CopyWithBefore(dst io.Writer, src io.Reader, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc) (written int64, err error) {
-	return Copy(dst, src, nil, beforeReadFunc, beforeWriteFunc, nil, nil, nil)
+	return Copy(dst, src, nil, beforeReadFunc, beforeWriteFunc, nil, nil, nil, nil)
 }
 
 func CopyWithAfter(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc) (written int64, err error) {
-	return Copy(dst, src, nil, nil, nil, afterReadFunc, afterWriteFunc, nil)
+	return Copy(dst, src, nil, nil, nil, afterReadFunc, afterWriteFunc, nil, nil)
 }
 
 func CopyWithNone(dst io.Writer, src io.Reader) (written int64, err error) {
-	return Copy(dst, src, nil, nil, nil, nil, nil, nil)
+	return Copy(dst, src, nil, nil, nil, nil, nil, nil, nil)
 }
 
-func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc, exitedFunc AfterCallbackFunc) (written int64, err error) {
+func CopyWithTimeout(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, timeout *time.Time) (w int64, err error) {
+	return Copy(dst, src, nil, nil, nil, afterReadFunc, nil, nil, timeout)
+}
+
+func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc, exitedFunc AfterCallbackFunc, timeout *time.Time) (written int64, err error) {
 	buf := CopyPool.Get(CopyPoolSize)
 	defer CopyPool.Put(buf)
 	defer func() {
@@ -40,7 +44,9 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 		}
 	}()
 	for {
-		//SetTimeout(src, time.Now().Add(60*time.Second))
+		if timeout != nil {
+			SetTimeout(src, *timeout)
+		}
 		if beforeReadFunc != nil {
 			beforeReadFunc()
 		}
@@ -70,12 +76,9 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 			}
 		}
 		if er != nil {
-			//if er == io.EOF {
-			//}
 			err = er
 			break
 		}
-		//SetTimeout(src, time.Time{})
 		if limit != nil {
 			limit.Limit()
 		}

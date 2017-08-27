@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
@@ -9,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kataras/go-errors"
 	"rkproxy/utils"
 )
 

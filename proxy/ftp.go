@@ -135,9 +135,11 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 
 	var read_notify = make(utils.ReadNotify)
 	var done = make(chan bool, 5)
+	var is_close = false
 	var command_mark FtpCommandFlag
 
 	finish := func() {
+		is_close = true
 		done <- true
 	}
 	notify := func(n int64, err error) {
@@ -145,7 +147,7 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 	}
 
 	go func() {
-		for {
+		for !is_close {
 			select {
 			case <-time.After(60 * 2 * time.Second):
 				finish()
@@ -155,6 +157,7 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 		}
 	}()
 
+	// remote -> self -> local
 	go func() {
 		var pasv_resp *FtpReturn
 		var pasv_server_conn net.Conn
@@ -168,8 +171,7 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 				pasv_client_conn.Close()
 			}
 		}()
-		for {
-			// remote -> self -> local
+		for !is_close {
 			str, err := remote.ReadBytes('\n')
 			if err != nil {
 				break
@@ -228,10 +230,10 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 		}
 	}()
 
+	// local -> self -> remote
 	go func() {
 		local := bufio.NewReader(local_conn)
-		for {
-			// local -> self -> remote
+		for !is_close {
 			str, err := local.ReadBytes('\n')
 			if err != nil {
 				break
@@ -240,6 +242,9 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 			if err != nil {
 				this.log.Info("Parse command error ", err)
 				continue
+			}
+			if command.isQuit() {
+				return
 			}
 			command_mark.Mark(command)
 			remote_conn.Write(str)
@@ -361,6 +366,8 @@ func (this *FtpProxy) Start() (err error) {
 		conn, err := this.ln.Accept()
 		if err != nil {
 			this.log.Info("Can't Accept: ", this.local_port, " ", err)
+		} else {
+			this.log.Info("Accept ", conn.RemoteAddr().String())
 		}
 		go this.handle(conn)
 	}

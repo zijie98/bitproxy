@@ -157,6 +157,6 @@ func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host strin
 		remote_host: remote_host,
 		remote_port: remote_port,
 		rate:        rate,
-		log:         utils.NewLogger("TCP/UDP PROXY"),
+		log:         utils.NewLogger("StreamProxy"),
 	}
 }

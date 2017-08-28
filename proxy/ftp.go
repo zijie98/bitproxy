@@ -135,11 +135,11 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 
 	var read_notify = make(utils.ReadNotify)
 	var done = make(chan bool, 5)
-	var is_close = false
+	var closed = false
 	var command_mark FtpCommandFlag
 
 	finish := func() {
-		is_close = true
+		closed = true
 		done <- true
 	}
 	notify := func(n int64, err error) {
@@ -147,7 +147,7 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 	}
 
 	go func() {
-		for !is_close {
+		for !closed {
 			select {
 			case <-time.After(60 * 2 * time.Second):
 				finish()
@@ -171,7 +171,7 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 				pasv_client_conn.Close()
 			}
 		}()
-		for !is_close {
+		for !closed {
 			str, err := remote.ReadBytes('\n')
 			if err != nil {
 				break
@@ -233,7 +233,7 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 	// local -> self -> remote
 	go func() {
 		local := bufio.NewReader(local_conn)
-		for !is_close {
+		for !closed {
 			str, err := local.ReadBytes('\n')
 			if err != nil {
 				break

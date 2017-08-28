@@ -106,10 +106,11 @@ func (this *HttpReproxy) Start() error {
 		ReadTimeout:          60 * 3 * time.Second,
 		WriteTimeout:         60 * 3 * time.Second,
 		MaxConnsPerIP:        30,
+		Logger:               utils.NewLogger("HttpReverseProxy"),
 	}
 	err := s.ListenAndServe(utils.JoinHostPort("", this.local_port))
 	if err != nil {
-		this.log.Info("HttpReverseProxy: ListenAndServe: ", err)
+		this.log.Info("ListenAndServe: ", err)
 		return err
 	}
 	return nil

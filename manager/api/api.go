@@ -2,10 +2,9 @@ package api
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"gopkg.in/gin-gonic/gin.v1"
+
 	"rkproxy/manager"
 	"rkproxy/utils"
 )
@@ -47,26 +46,10 @@ func afterFunc(ctx *gin.Context) {
 func Start(pwd string, port uint) error {
 	password = pwd
 
-	logfile, err := logfile()
-	if err == nil {
-		gin.DefaultWriter = logfile
-	}
+	gin.DefaultWriter = utils.NewLogger("api.log")
+	gin.DefaultErrorWriter = utils.NewLogger("api.error.log")
 
 	return InitEngine().Run(utils.JoinHostPort("", port))
-}
-
-func logfile() (file *os.File, err error) {
-	wd, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		return nil, err
-	}
-
-	logPath := wd + "/api.log"
-	file, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, err
-	}
-	return
 }
 
 func validate(ctx *gin.Context) {

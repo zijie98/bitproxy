@@ -26,7 +26,7 @@ type HttpReproxy struct {
 	proxyClient *fasthttp.HostClient
 }
 
-var ReproxyUserAgent = "RKProxy"
+var ReproxyUserAgent = "BitProxy"
 
 func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	this.log.Info(ctx.RemoteIP().String(), " - ", string(ctx.Method()), " - ", ctx.URI().String(), " - ", string(ctx.UserAgent()))

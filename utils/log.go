@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -12,10 +13,10 @@ type Logger struct {
 }
 
 func NewLogger(prefix string) *Logger {
-	wd, _ := os.Getwd()
+	current_path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	filename := prefix + ".log"
 
-	file, err := os.OpenFile(wd+filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(current_path+filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic("Can't open log file for " + filename + " " + err.Error())
 	}

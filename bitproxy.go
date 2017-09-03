@@ -20,7 +20,7 @@ import (
 
 var (
 	config_path = "config.json"
-	pid_path    = "rkproxy.pid"
+	pid_path    = "bitproxy.pid"
 )
 
 var man *manager.Manager
@@ -44,7 +44,7 @@ func listenSignal() {
 
 func initFlag() {
 	flag.StringVar(&config_path, "c", "config.json", "配置文件")
-	flag.StringVar(&pid_path, "p", "rkproxy.pid", "进程id路径")
+	flag.StringVar(&pid_path, "p", "bitproxy.pid", "进程id路径")
 	flag.Parse()
 }
 

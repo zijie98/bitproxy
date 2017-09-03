@@ -12,8 +12,10 @@ type Logger struct {
 }
 
 func NewLogger(prefix string) *Logger {
+	wd, _ := os.Getwd()
 	filename := prefix + ".log"
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	file, err := os.OpenFile(wd+filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic("Can't open log file for " + filename + " " + err.Error())
 	}

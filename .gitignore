@@ -2,10 +2,10 @@
 test-*
 !test/*.go
 config.json
-rkproxy.pid
+bitproxy.pid
 Capfile
 config
 log
-/rkproxy
+/bitproxy
 bin
 *.log

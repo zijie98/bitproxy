@@ -12,10 +12,10 @@ import (
 	"os/signal"
 	"runtime"
 
-	"rkproxy/manager"
-	"rkproxy/manager/api"
-	"rkproxy/services"
-	"rkproxy/utils"
+	"bitproxy/manager"
+	"bitproxy/manager/api"
+	"bitproxy/services"
+	"bitproxy/utils"
 )
 
 var (

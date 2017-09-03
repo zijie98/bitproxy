@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	"bitproxy/services"
 	"gopkg.in/gin-gonic/gin.v1"
-	"rkproxy/services"
 )
 
 type BlackPost struct {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"rkproxy/manager"
+	"bitproxy/manager"
 	//"reflect"
 	"os"
 )

@@ -11,7 +11,7 @@ import (
 	"github.com/codahale/chacha20"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/salsa20/salsa"
-	"rkproxy/utils"
+	"bitproxy/utils"
 )
 
 type cipherInfo struct {

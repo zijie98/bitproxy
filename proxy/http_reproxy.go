@@ -8,8 +8,8 @@ import (
 	"net"
 	"time"
 
-	"rkproxy/services"
-	"rkproxy/utils"
+	"bitproxy/services"
+	"bitproxy/utils"
 
 	"github.com/valyala/fasthttp"
 )

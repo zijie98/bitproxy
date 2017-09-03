@@ -5,8 +5,8 @@ import (
 	"io"
 	"net"
 	"os"
-	proxy "rkproxy/proxy"
-	"rkproxy/proxy/ss"
+	proxy "bitproxy/proxy"
+	"bitproxy/proxy/ss"
 	"time"
 )
 

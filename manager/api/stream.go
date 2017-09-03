@@ -6,7 +6,7 @@ import (
 	"github.com/kataras/go-errors"
 	"gopkg.in/gin-gonic/gin.v1"
 
-	"rkproxy/manager"
+	"bitproxy/manager"
 )
 
 func CreateStream(ctx *gin.Context) {

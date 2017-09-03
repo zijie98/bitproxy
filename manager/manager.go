@@ -11,7 +11,8 @@ import (
 	"os"
 
 	"github.com/jinzhu/configor"
-	"rkproxy/utils"
+	
+	"bitproxy/utils"
 )
 
 var Man *Manager

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
-	"rkproxy/services"
-	"rkproxy/utils"
+	"bitproxy/services"
+	"bitproxy/utils"
 )
 
 func main() {

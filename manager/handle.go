@@ -4,9 +4,9 @@
 package manager
 
 import (
-	"rkproxy/proxy"
-	"rkproxy/proxy/ss"
-	"rkproxy/utils"
+	"bitproxy/proxy"
+	"bitproxy/proxy/ss"
+	"bitproxy/utils"
 )
 
 //	代理程序的接口

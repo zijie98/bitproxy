@@ -2,11 +2,12 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/kataras/go-errors"
 	"gopkg.in/gin-gonic/gin.v1"
-	"rkproxy/manager"
-	"time"
+	
+	"bitproxy/manager"
 )
 
 func CreateSsServer(ctx *gin.Context) {

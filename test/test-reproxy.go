@@ -7,7 +7,7 @@ import (
 
 	"bufio"
 	"bytes"
-	"rkproxy/proxy"
+	"bitproxy/proxy"
 )
 
 func main() {

@@ -7,9 +7,9 @@ import (
 	"net"
 	"time"
 
-	"rkproxy/proxy/ss"
-	"rkproxy/services"
-	"rkproxy/utils"
+	"bitproxy/proxy/ss"
+	"bitproxy/services"
+	"bitproxy/utils"
 )
 
 const READ_TIMEOUT = 60

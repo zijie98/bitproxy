@@ -18,7 +18,7 @@ import (
 	"github.com/xtaci/kcp-go"
 	//"github.com/xtaci/smux"
 
-	"rkproxy/utils"
+	"bitproxy/utils"
 )
 
 type SSClient struct {

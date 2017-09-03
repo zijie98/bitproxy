@@ -18,8 +18,8 @@ import (
 	"github.com/xtaci/kcp-go"
 	//"github.com/xtaci/smux"
 
-	"rkproxy/services"
-	"rkproxy/utils"
+	"bitproxy/services"
+	"bitproxy/utils"
 )
 
 type SSServer struct {

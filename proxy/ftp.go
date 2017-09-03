@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"rkproxy/utils"
+	"bitproxy/utils"
 )
 
 type FtpProxy struct {

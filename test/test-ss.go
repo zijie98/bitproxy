@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"golang.org/x/net/proxy"
 	"net/http"
-	"rkproxy/proxy/ss"
+	"bitproxy/proxy/ss"
 	"time"
 )
 

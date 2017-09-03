@@ -2,7 +2,7 @@ package ss
 
 import (
 	"net"
-	"rkproxy/utils"
+	"bitproxy/utils"
 	"time"
 )
 

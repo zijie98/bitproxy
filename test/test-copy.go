@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"rkproxy/utils"
+	"bitproxy/utils"
 )
 
 func main() {

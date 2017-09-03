@@ -5,8 +5,8 @@ import (
 
 	"gopkg.in/gin-gonic/gin.v1"
 
-	"rkproxy/manager"
-	"rkproxy/utils"
+	"bitproxy/manager"
+	"bitproxy/utils"
 )
 
 var password string

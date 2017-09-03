@@ -6,7 +6,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 
-	"rkproxy/utils"
+	"bitproxy/utils"
 )
 
 var RedisPool *redis.Pool

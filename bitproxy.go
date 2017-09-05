@@ -18,7 +18,6 @@ import (
 	"bitproxy/utils"
 )
 
-var man *manager.Manager
 var log *utils.Logger = utils.NewLogger("Main")
 
 func listenSignal() {
@@ -28,26 +27,31 @@ func listenSignal() {
 		select {
 		case sig := <-c:
 			fmt.Printf("ctrl+c (%v)\n", sig)
-			if man != nil {
-				man.StopAll()
+			if manager.Man != nil {
+				manager.Man.StopAll()
 			}
-			os.Remove(man.PidPath)
+			os.Remove(manager.Man.PidPath)
 			os.Exit(0)
 		}
 	}()
 }
 
 func initFlag() {
-	flag.StringVar(&man.ConfigPath, "c", man.ConfigPath, "配置文件")
-	flag.StringVar(&man.PidPath, "p", man.PidPath, "进程id路径")
+	config_path := flag.String("c", manager.CONFIG_FILENAME, "配置文件")
+	pid_path := flag.String("p", manager.Man.PidPath, "进程id路径")
 	flag.Parse()
+
+	if _, err := os.Stat(*config_path); os.IsNotExist(err) {
+		manager.Man.ConfigPath = *config_path
+	}
+	manager.Man.PidPath = *pid_path
 }
 
 func initPid() {
-	if _, err := os.Stat(man.PidPath); os.IsExist(err) {
-		os.Remove(man.PidPath)
+	if _, err := os.Stat(manager.Man.PidPath); os.IsExist(err) {
+		os.Remove(manager.Man.PidPath)
 	}
-	file, err := os.OpenFile(man.PidPath, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(manager.Man.PidPath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("写pid文件错误：", err)
 		return

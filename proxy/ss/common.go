@@ -2,8 +2,9 @@ package ss
 
 import (
 	"net"
-	"bitproxy/utils"
 	"time"
+
+	"github.com/molisoft/bitproxy/utils"
 )
 
 // ss common

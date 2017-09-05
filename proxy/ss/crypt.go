@@ -9,9 +9,9 @@ import (
 	"unsafe"
 
 	"github.com/codahale/chacha20"
+	"github.com/molisoft/bitproxy/utils"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/salsa20/salsa"
-	"bitproxy/utils"
 )
 
 type cipherInfo struct {

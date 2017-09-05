@@ -7,9 +7,9 @@ import (
 	"net"
 	"time"
 
-	"bitproxy/proxy/ss"
-	"bitproxy/services"
-	"bitproxy/utils"
+	"github.com/molisoft/bitproxy/proxy/ss"
+	"github.com/molisoft/bitproxy/services"
+	"github.com/molisoft/bitproxy/utils"
 )
 
 const READ_TIMEOUT = 60

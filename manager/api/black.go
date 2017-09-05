@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"bitproxy/services"
+	"github.com/molisoft/bitproxy/services"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 

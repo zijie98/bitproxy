@@ -13,8 +13,7 @@ import (
 	"path/filepath"
 
 	"github.com/jinzhu/configor"
-
-	"bitproxy/utils"
+	"github.com/molisoft/bitproxy/utils"
 )
 
 var Man *Manager

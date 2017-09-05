@@ -4,9 +4,8 @@ import (
 	"net/http"
 
 	"github.com/kataras/go-errors"
+	"github.com/molisoft/bitproxy/manager"
 	"gopkg.in/gin-gonic/gin.v1"
-
-	"bitproxy/manager"
 )
 
 func CreateStream(ctx *gin.Context) {

@@ -12,13 +12,12 @@ import (
 	"os/signal"
 	"runtime"
 
-	"bitproxy/manager"
-	"bitproxy/manager/api"
-	"bitproxy/services"
-	"bitproxy/utils"
+	"github.com/molisoft/bitproxy/manager"
+	"github.com/molisoft/bitproxy/manager/api"
+	"github.com/molisoft/bitproxy/services"
+	"github.com/molisoft/bitproxy/utils"
 )
 
-var man *manager.Manager
 var log *utils.Logger = utils.NewLogger("Main")
 
 func listenSignal() {
@@ -28,26 +27,26 @@ func listenSignal() {
 		select {
 		case sig := <-c:
 			fmt.Printf("ctrl+c (%v)\n", sig)
-			if man != nil {
-				man.StopAll()
+			if manager.Man != nil {
+				manager.Man.StopAll()
 			}
-			os.Remove(man.PidPath)
+			os.Remove(manager.Man.PidPath)
 			os.Exit(0)
 		}
 	}()
 }
 
 func initFlag() {
-	flag.StringVar(&man.ConfigPath, "c", man.ConfigPath, "配置文件")
-	flag.StringVar(&man.PidPath, "p", man.PidPath, "进程id路径")
+	flag.StringVar(&manager.Man.ConfigPath, "c", manager.Man.ConfigPath, "配置文件")
+	flag.StringVar(&manager.Man.PidPath, "p", manager.Man.PidPath, "进程id路径")
 	flag.Parse()
 }
 
 func initPid() {
-	if _, err := os.Stat(man.PidPath); os.IsExist(err) {
-		os.Remove(man.PidPath)
+	if _, err := os.Stat(manager.Man.PidPath); os.IsExist(err) {
+		os.Remove(manager.Man.PidPath)
 	}
-	file, err := os.OpenFile(man.PidPath, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(manager.Man.PidPath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("写pid文件错误：", err)
 		return

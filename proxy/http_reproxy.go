@@ -8,9 +8,8 @@ import (
 	"net"
 	"time"
 
-	"bitproxy/services"
-	"bitproxy/utils"
-
+	"github.com/molisoft/bitproxy/services"
+	"github.com/molisoft/bitproxy/utils"
 	"github.com/valyala/fasthttp"
 )
 

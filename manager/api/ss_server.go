@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/kataras/go-errors"
+	"github.com/molisoft/bitproxy/manager"
 	"gopkg.in/gin-gonic/gin.v1"
-	
-	"bitproxy/manager"
 )
 
 func CreateSsServer(ctx *gin.Context) {

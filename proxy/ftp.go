@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"bitproxy/utils"
+	"github.com/molisoft/bitproxy/utils"
 )
 
 type FtpProxy struct {

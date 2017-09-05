@@ -4,9 +4,9 @@
 package manager
 
 import (
-	"bitproxy/proxy"
-	"bitproxy/proxy/ss"
-	"bitproxy/utils"
+	"github.com/molisoft/bitproxy/proxy"
+	"github.com/molisoft/bitproxy/proxy/ss"
+	"github.com/molisoft/bitproxy/utils"
 )
 
 //	代理程序的接口

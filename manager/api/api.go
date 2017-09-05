@@ -5,8 +5,8 @@ import (
 
 	"gopkg.in/gin-gonic/gin.v1"
 
-	"bitproxy/manager"
-	"bitproxy/utils"
+	"github.com/molisoft/bitproxy/manager"
+	"github.com/molisoft/bitproxy/utils"
 )
 
 var password string

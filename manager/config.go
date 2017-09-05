@@ -70,7 +70,7 @@ type FtpProxyConfig struct {
 	ServerPort uint   `json:"server_port"`
 	ServerHost string `json:"server_host"`
 }
-
+	
 type ProxyConfig struct {
 	Api         *ApiConfig          `json:"api"`
 	Redis       *RedisConfig        `json:"redis"`

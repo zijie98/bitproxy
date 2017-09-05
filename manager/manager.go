@@ -9,24 +9,44 @@ package manager
 
 import (
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/jinzhu/configor"
-	
+
 	"bitproxy/utils"
 )
 
 var Man *Manager
 
+const ETC_PATH = "/etc"
+const CONFIG_FILENAME = "config.json"
+const PID_FILENAME = "bitproxy.pid"
+
 type Manager struct {
 	handles    map[uint]ProxyHandler
-	configPath string
+	ConfigPath string
+	PidPath string
+	WorkspacePath string
 
 	log *utils.Logger
 }
 
-func New(configPath string) {
+func New() {
+	path, _ := exec.LookPath(os.Args[0])
+	workspacePath := filepath.Dir(path)
+	pidPath := filepath.Join(workspacePath, PID_FILENAME)
+
+	configPath := filepath.Join(workspacePath, CONFIG_FILENAME)
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		configPath = filepath.Join(ETC_PATH, CONFIG_FILENAME)
+	}
+
 	Man = &Manager{
-		configPath: configPath,
+		ConfigPath: configPath,
+		PidPath: pidPath,
+		WorkspacePath: workspacePath,
+
 		handles:    make(map[uint]ProxyHandler),
 		log:        utils.NewLogger("Manager"),
 	}
@@ -35,6 +55,7 @@ func New(configPath string) {
 func (this *Manager) Config() *ProxyConfig {
 	return &Config
 }
+
 func (this *Manager) GetHandles() map[uint]ProxyHandler {
 	return this.handles
 }
@@ -50,7 +71,7 @@ func (this *Manager) DeleteByPort(port uint) {
 //	将配置文件格式化到配置
 //
 func (this *Manager) ParseConfig() (err error) {
-	err = configor.Load(&Config, this.configPath)
+	err = configor.Load(&Config, this.ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -85,10 +106,10 @@ func (this *Manager) ParseConfig() (err error) {
 func (this *Manager) SaveToConfig() error {
 	b, err := Config.toBytes()
 	if err != nil {
-		this.log.Info("格式化配置{", this.configPath, "}出错:", err)
+		this.log.Info("格式化配置{", this.ConfigPath, "}出错:", err)
 		return err
 	}
-	file, err := os.OpenFile(this.configPath, os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(this.ConfigPath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		this.log.Info("创建配置文件失败: ", err)
 		return err

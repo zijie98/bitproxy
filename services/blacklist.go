@@ -31,7 +31,7 @@ type RequestAt struct {
 
 var Filter = make(chan RequestAt, MAX_FILTER_LIMIT)
 
-type BlockWall struct {
+type BlackWall struct {
 	blacks   map[string]bool
 	runtimes map[string]*list.List
 
@@ -41,11 +41,11 @@ type BlockWall struct {
 	mtx         sync.Mutex
 }
 
-var Wall *BlockWall
+var Wall *BlackWall
 
 func StartBlackList() {
 	if Wall == nil {
-		Wall = &BlockWall{
+		Wall = &BlackWall{
 			max_limit:   MAX_LIMIT,
 			max_between: MAX_BETWEEN,
 			runtimes:    make(map[string]*list.List),
@@ -55,7 +55,7 @@ func StartBlackList() {
 	Wall.Start()
 }
 
-func (r *BlockWall) Start() {
+func (r *BlackWall) Start() {
 	r.initBlack()
 	go func() {
 		for {
@@ -69,11 +69,11 @@ func (r *BlockWall) Start() {
 	}()
 }
 
-func (r *BlockWall) Stop() {
+func (r *BlackWall) Stop() {
 	r.done <- true
 }
 
-func (r *BlockWall) AddIp(ip RequestAt) {
+func (r *BlackWall) AddIp(ip RequestAt) {
 	if r.IsBlack(ip.Ip) {
 		return
 	}
@@ -90,7 +90,7 @@ func (r *BlockWall) AddIp(ip RequestAt) {
 }
 
 // TODO 将ip添加到redis中，每次启动从redis中初始化已经拉黑的ip
-func (r *BlockWall) Black(ip string) {
+func (r *BlackWall) Black(ip string) {
 	conn, err := getRedisConn()
 	if err != nil {
 		return
@@ -100,7 +100,7 @@ func (r *BlockWall) Black(ip string) {
 	r.blacks[ip] = true
 }
 
-func (r *BlockWall) initBlack() error {
+func (r *BlackWall) initBlack() error {
 	conn, err := getRedisConn()
 	if err != nil {
 		return err
@@ -115,14 +115,14 @@ func (r *BlockWall) initBlack() error {
 	return nil
 }
 
-func (r *BlockWall) IsBlack(ip string) bool {
+func (r *BlackWall) IsBlack(ip string) bool {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	return r.blacks[ip]
 }
 
-func (r *BlockWall) check(ip RequestAt) {
+func (r *BlackWall) check(ip RequestAt) {
 	if r.runtimes[ip.Ip].Len() < r.max_limit {
 		return
 	}
@@ -134,7 +134,7 @@ func (r *BlockWall) check(ip RequestAt) {
 	r.runtimes[ip.Ip].Init() // 超过MAX_LIMIT个请求清空
 }
 
-func (r *BlockWall) Remove(ip string) {
+func (r *BlackWall) Remove(ip string) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 

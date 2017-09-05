@@ -37,9 +37,14 @@ func listenSignal() {
 }
 
 func initFlag() {
-	flag.StringVar(&manager.Man.ConfigPath, "c", manager.Man.ConfigPath, "配置文件")
-	flag.StringVar(&manager.Man.PidPath, "p", manager.Man.PidPath, "进程id路径")
+	config_path := flag.String("c", manager.CONFIG_FILENAME, "配置文件")
+	pid_path := flag.String("p", manager.Man.PidPath, "进程id路径")
 	flag.Parse()
+
+	if _, err := os.Stat(*config_path); os.IsNotExist(err) {
+		manager.Man.ConfigPath = *config_path
+	}
+	manager.Man.PidPath = *pid_path
 }
 
 func initPid() {

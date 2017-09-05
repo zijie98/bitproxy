@@ -9,7 +9,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 
 	"github.com/molisoft/bitproxy/manager"
@@ -18,7 +20,8 @@ import (
 	"github.com/molisoft/bitproxy/utils"
 )
 
-var log *utils.Logger = utils.NewLogger("Main")
+var app_path string
+var log *utils.Logger
 
 func listenSignal() {
 	c := make(chan os.Signal, 1)
@@ -34,6 +37,16 @@ func listenSignal() {
 			os.Exit(0)
 		}
 	}()
+}
+
+func initEnv() {
+	path, _ := exec.LookPath(os.Args[0])
+	app_path = filepath.Dir(path)
+}
+
+func initLog() {
+	utils.LogPath = app_path
+	log = utils.NewLogger("Main")
 }
 
 func initFlag() {
@@ -93,7 +106,11 @@ func initPublicIp() {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	manager.New()
+	initEnv()
+
+	initLog()
+
+	manager.New(app_path)
 
 	initFlag()
 

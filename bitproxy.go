@@ -18,11 +18,6 @@ import (
 	"bitproxy/utils"
 )
 
-var (
-	config_path = "config.json"
-	pid_path    = "bitproxy.pid"
-)
-
 var man *manager.Manager
 var log *utils.Logger = utils.NewLogger("Main")
 
@@ -36,23 +31,23 @@ func listenSignal() {
 			if man != nil {
 				man.StopAll()
 			}
-			os.Remove(pid_path)
+			os.Remove(man.PidPath)
 			os.Exit(0)
 		}
 	}()
 }
 
 func initFlag() {
-	flag.StringVar(&config_path, "c", "config.json", "配置文件")
-	flag.StringVar(&pid_path, "p", "bitproxy.pid", "进程id路径")
+	flag.StringVar(&man.ConfigPath, "c", man.ConfigPath, "配置文件")
+	flag.StringVar(&man.PidPath, "p", man.PidPath, "进程id路径")
 	flag.Parse()
 }
 
 func initPid() {
-	if _, err := os.Stat(pid_path); os.IsExist(err) {
-		os.Remove(pid_path)
+	if _, err := os.Stat(man.PidPath); os.IsExist(err) {
+		os.Remove(man.PidPath)
 	}
-	file, err := os.OpenFile(pid_path, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(man.PidPath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("写pid文件错误：", err)
 		return
@@ -93,9 +88,10 @@ func initPublicIp() {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	initFlag()
 
-	manager.New(config_path)
+	manager.New()
+
+	initFlag()
 
 	err := manager.Man.ParseConfig()
 	if err != nil {

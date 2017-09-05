@@ -9,7 +9,6 @@ package manager
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/jinzhu/configor"
@@ -32,9 +31,9 @@ type Manager struct {
 	log *utils.Logger
 }
 
-func New() {
-	path, _ := exec.LookPath(os.Args[0])
-	workspacePath := filepath.Dir(path)
+func New(app_path string) {
+  workspacePath := app_path
+
 	pidPath := filepath.Join(workspacePath, PID_FILENAME)
 
 	configPath := filepath.Join(workspacePath, CONFIG_FILENAME)
@@ -48,7 +47,7 @@ func New() {
 		WorkspacePath: workspacePath,
 
 		handles:    make(map[uint]ProxyHandler),
-		log:        utils.NewLogger("Manager"),
+		log: 				utils.NewLogger("Manager"),
 	}
 }
 

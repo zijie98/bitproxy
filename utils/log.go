@@ -12,11 +12,11 @@ type Logger struct {
 	logfile *os.File
 }
 
-func NewLogger(prefix string) *Logger {
-	current_path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	filename := prefix + ".log"
+var LogPath string
 
-	file, err := os.OpenFile(current_path+"/"+filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func NewLogger(prefix string) *Logger {
+	filename := prefix + ".log"
+	file, err := os.OpenFile(filepath.Join(LogPath, filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic("Can't open log file for " + filename + " " + err.Error())
 	}

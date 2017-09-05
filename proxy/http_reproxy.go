@@ -31,7 +31,7 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	this.log.Info(ctx.RemoteIP().String(), " - ", string(ctx.Method()), " - ", ctx.URI().String(), " - ", string(ctx.UserAgent()))
 
 	if this.isBlack(ctx.RemoteAddr()) {
-		this.log.Info("Blacked ", ctx.RemoteIP())
+		this.log.Info("Blocked ", ctx.RemoteIP())
 		return
 	}
 
@@ -92,11 +92,11 @@ func (this *HttpReproxy) Start() error {
 	this.log.Info("Listen port", this.local_port)
 
 	this.proxyClient = &fasthttp.HostClient{
-		Addr: utils.JoinHostPort(this.remote_host, this.remote_port),
-		//MaxConns:        512,
-		//MaxConnDuration: 60 * time.Second,
-		//ReadTimeout:     60 * time.Second,
-		//WriteTimeout:    60 * time.Second,
+		Addr:            utils.JoinHostPort(this.remote_host, this.remote_port),
+		MaxConns:        512,
+		MaxConnDuration: 60 * time.Second,
+		ReadTimeout:     60 * time.Second,
+		WriteTimeout:    60 * time.Second,
 	}
 
 	s := &fasthttp.Server{

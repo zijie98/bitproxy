@@ -22,16 +22,16 @@ const CONFIG_FILENAME = "config.json"
 const PID_FILENAME = "bitproxy.pid"
 
 type Manager struct {
-	handles    map[uint]ProxyHandler
-	ConfigPath string
-	PidPath string
+	handles       map[uint]ProxyHandler
+	ConfigPath    string
+	PidPath       string
 	WorkspacePath string
 
 	log *utils.Logger
 }
 
 func New(app_path string) {
-  workspacePath := app_path
+	workspacePath := app_path
 
 	pidPath := filepath.Join(workspacePath, PID_FILENAME)
 
@@ -41,12 +41,12 @@ func New(app_path string) {
 	}
 
 	Man = &Manager{
-		ConfigPath: configPath,
-		PidPath: pidPath,
+		ConfigPath:    configPath,
+		PidPath:       pidPath,
 		WorkspacePath: workspacePath,
 
-		handles:    make(map[uint]ProxyHandler),
-		log: 				utils.NewLogger("Manager"),
+		handles: make(map[uint]ProxyHandler),
+		log:     utils.NewLogger("Manager"),
 	}
 }
 

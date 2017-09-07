@@ -41,7 +41,7 @@ func (this *SSClient) handle(client io.ReadWriter) {
 	}
 	//clog("1 - ", buf)
 	if buf[0] != SOCKS5_VERSION {
-		this.log.Info("Only suppert socks5")
+		this.log.Info("Only support socks5")
 		return
 	}
 

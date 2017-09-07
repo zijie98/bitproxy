@@ -33,6 +33,7 @@ func (log *Logger) Info(msg ...interface{}) {
 		line += fmt.Sprintf("%v ", str)
 	}
 	log.logfile.WriteString(line + "\n")
+	fmt.Println(line)
 }
 
 func (log *Logger) Write(p []byte) (n int, err error) {

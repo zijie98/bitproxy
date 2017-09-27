@@ -6,7 +6,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -49,16 +48,16 @@ func initLog() {
 	log = utils.NewLogger("Main")
 }
 
-func initFlag() {
-	config_path := flag.String("c", manager.CONFIG_FILENAME, "配置文件")
-	pid_path := flag.String("p", manager.Man.PidPath, "进程id路径")
-	flag.Parse()
+// func initFlag() {
+// 	config_path := flag.String("c", manager.CONFIG_FILENAME, "配置文件")
+// 	pid_path := flag.String("p", manager.Man.PidPath, "进程id路径")
+// 	flag.Parse()
 
-	if _, err := os.Stat(*config_path); os.IsNotExist(err) {
-		manager.Man.ConfigPath = *config_path
-	}
-	manager.Man.PidPath = *pid_path
-}
+// 	if _, err := os.Stat(*config_path); os.IsNotExist(err) {
+// 		manager.Man.ConfigPath = *config_path
+// 	}
+// 	manager.Man.PidPath = *pid_path
+// }
 
 func initPid() {
 	if _, err := os.Stat(manager.Man.PidPath); os.IsExist(err) {
@@ -112,7 +111,7 @@ func main() {
 
 	manager.New(app_path)
 
-	initFlag()
+	//initFlag()
 
 	err := manager.Man.ParseConfig()
 	if err != nil {

@@ -205,6 +205,9 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 				if pasv_resp != nil && resp.IsOpening() {
 					if command_mark.lastIsDownload() {
 						go func() {
+							if pasv_client_conn == nil || pasv_server_conn == nil {
+								return
+							}
 							_, e := utils.CopyWithAfter(pasv_client_conn, pasv_server_conn, notify, notify)
 							if e != nil {
 								pasv_server_conn.Close()
@@ -215,6 +218,9 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 						}()
 					} else {
 						go func() {
+							if pasv_client_conn == nil || pasv_server_conn == nil {
+								return
+							}
 							_, e := utils.CopyWithAfter(pasv_server_conn, pasv_client_conn, notify, notify)
 							if e != nil {
 								pasv_server_conn.Close()

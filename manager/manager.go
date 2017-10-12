@@ -75,25 +75,25 @@ func (this *Manager) ParseConfig() (err error) {
 	}
 	if Config.HttpReproxy != nil {
 		for _, cfg := range Config.HttpReproxy {
-			this.CreateHttpReproxy(&cfg)
+			this.CreateProxy(&cfg)
 		}
 	}
 	if Config.Stream != nil {
 		for _, cfg := range Config.Stream {
-			this.CreateStreamProxy(&cfg)
+			this.CreateProxy(&cfg)
 		}
 	}
 	if Config.SsClient != nil {
-		this.CreateSsClient(Config.SsClient)
+		this.CreateProxy(Config.SsClient)
 	}
 	if Config.SsServer != nil {
 		for _, cfg := range Config.SsServer {
-			this.CreateSsServer(&cfg)
+			this.CreateProxy(&cfg)
 		}
 	}
 	if Config.FtpProxy != nil {
 		for _, cfg := range Config.FtpProxy {
-			this.CreateFtpProxy(&cfg)
+			this.CreateProxy(&cfg)
 		}
 	}
 	return
@@ -143,41 +143,35 @@ func (this *Manager) RunAll() {
 	}
 }
 
-//	创建Tcp代理
-//
-func (this *Manager) CreateStreamProxy(config *StreamProxyConfig) ProxyHandler {
-	handle := NewStreamProxy(config)
-	this.handles[config.LocalPort] = handle
-	return handle
+func (this *Manager) Stop(port uint) {
+	handler := this.FindProxyByPort(port)
+	if handler != nil {
+		handler.Stop()
+	}
 }
 
-//	创建SS客户端
-//
-func (this *Manager) CreateSsClient(config *SsClientConfig) ProxyHandler {
-	handle := NewSsClient(config)
-	this.handles[config.LocalPort] = handle
-	return handle
+func (this *Manager) Start(port uint) {
+	handler := this.FindProxyByPort(port)
+	if handler != nil {
+		go handler.Start()
+	}
 }
 
-//	创建ss服务器端
-//
-func (this *Manager) CreateSsServer(config *SsServerConfig) ProxyHandler {
-	handle := NewSsServer(config)
-	this.handles[config.Port] = handle
-	return handle
-}
-
-//	创建Http反向代理
-//
-func (this *Manager) CreateHttpReproxy(config *HttpReproxyConfig) ProxyHandler {
-	handle := NewHttpReproxy(config)
-	this.handles[config.LocalPort] = handle
-	return handle
-}
-
-// 创建ftp代理
-func (this *Manager) CreateFtpProxy(config *FtpProxyConfig) ProxyHandler {
-	handle := NewFtpProxy(config)
-	this.handles[config.LocalPort] = handle
-	return handle
+func (this *Manager) CreateProxy(config interface{}) (handler ProxyHandler) {
+	switch config.(type) {
+	case *StreamProxyConfig:
+		handler = NewStreamProxy(config.(*StreamProxyConfig))
+	case *SsClientConfig:
+		handler = NewSsClient(config.(*SsClientConfig))
+	case *SsServerConfig:
+		handler = NewSsServer(config.(*SsServerConfig))
+	case *HttpReproxyConfig:
+		handler = NewHttpReproxy(config.(*HttpReproxyConfig))
+	case *FtpProxyConfig:
+		handler = NewFtpProxy(config.(*FtpProxyConfig))
+	}
+	if handler != nil {
+		this.handles[handler.Port()] = handler
+	}
+	return
 }

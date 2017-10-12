@@ -18,7 +18,7 @@ func CreateSsServer(ctx *gin.Context) {
 	}
 	e := make(chan error)
 	go func() {
-		e <- manager.Man.CreateSsServer(&server_config).Start()
+		e <- manager.Man.CreateProxy(&server_config).Start()
 	}()
 	select {
 	case err = <-e:
@@ -105,5 +105,5 @@ func modifySs(config *manager.SsServerConfig) error {
 	if err != nil {
 		return err
 	}
-	return manager.Man.CreateSsServer(config).Start()
+	return manager.Man.CreateProxy(config).Start()
 }

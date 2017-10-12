@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/net/proxy"
 	"net/http"
-	"bitproxy/proxy/ss"
 	"time"
+
+	"github.com/molisoft/bitproxy/proxy/ss"
+	"golang.org/x/net/proxy"
 )
 
 func main() {
-	net := ss.CryptXor
+	net := ss.CryptChacha20
 	server := ss.NewServer(ss.KCP_PROTOCOL, 1990, "hellopwd", net, 0)
 	go server.Start()
 

@@ -18,6 +18,8 @@ type FtpProxy struct {
 	remote_host string
 	remote_port uint
 
+	done bool
+
 	log *utils.Logger
 	ln  net.Listener
 }
@@ -368,19 +370,27 @@ func (this *FtpProxy) Start() (err error) {
 		this.log.Info("Can't Listen port: ", this.local_port, " ", err)
 		return err
 	}
-	for {
+	for !this.done {
 		conn, err := this.ln.Accept()
 		if err != nil {
 			this.log.Info("Can't Accept: ", this.local_port, " ", err)
-		} else {
-			this.log.Info("Accept ", conn.RemoteAddr().String())
+			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+				continue
+			} else {
+				return err
+			}
 		}
+		this.log.Info("Accept ", conn.RemoteAddr().String())
 		go this.handle(conn)
 	}
 	return nil
 }
 
-func (tihs *FtpProxy) Stop() error {
+func (this *FtpProxy) Stop() error {
+	this.done = true
+	if this.ln != nil {
+		this.ln.Close()
+	}
 	return nil
 }
 

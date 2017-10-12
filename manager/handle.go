@@ -9,6 +9,13 @@ import (
 	"github.com/molisoft/bitproxy/utils"
 )
 
+type ProxyStatus int
+
+const (
+	RUNING ProxyStatus = iota
+	STOP
+)
+
 //	代理程序的接口
 //
 type Proxyer interface {
@@ -21,7 +28,7 @@ type Proxyer interface {
 //	句柄接口
 //
 type ProxyHandler interface {
-	ListeningPort() uint
+	Port() uint
 	Start() error
 	Stop() error
 	GetConfig() interface{}
@@ -33,45 +40,37 @@ type ProxyHandler interface {
 type Handle struct {
 	Config interface{}
 	Proxy  Proxyer
+
+	status ProxyStatus
 }
 
-func (this *Handle) ListeningPort() uint {
+func (this *Handle) Port() uint {
 	return this.Proxy.LocalPort()
 }
+
 func (this *Handle) Start() error {
+	if this.status == RUNING {
+		return nil
+	} else {
+		this.status = RUNING
+	}
 	return this.Proxy.Start()
 }
+
 func (this *Handle) Stop() error {
+	this.status = STOP
 	return this.Proxy.Stop()
 }
+
 func (this *Handle) GetConfig() interface{} {
 	return this.Config
 }
+
 func (this *Handle) GetTraffic() (uint64, error) {
 	return this.Proxy.Traffic()
 }
 
-type HttpReproxyHandle struct {
-	Handle
-}
-
-type StreamProxyHandle struct {
-	Handle
-}
-
-type SsClientHandle struct {
-	Handle
-}
-
-type SsServerHandle struct {
-	Handle
-}
-
-type FtpProxyHandle struct {
-	Handle
-}
-
-func NewStreamProxy(config *StreamProxyConfig) *StreamProxyHandle {
+func NewStreamProxy(config *StreamProxyConfig) *Handle {
 	pxy := proxy.NewStreamProxy(
 		ss.NetProtocol(config.LocalNet),
 		config.LocalPort,
@@ -79,16 +78,14 @@ func NewStreamProxy(config *StreamProxyConfig) *StreamProxyHandle {
 		config.ServerPort,
 		config.Rate,
 	)
-	handle := &StreamProxyHandle{
-		Handle: Handle{
-			Config: config,
-			Proxy:  pxy,
-		},
+	handle := &Handle{
+		Config: config,
+		Proxy:  pxy,
 	}
 	return handle
 }
 
-func NewSsClient(config *SsClientConfig) *SsClientHandle {
+func NewSsClient(config *SsClientConfig) *Handle {
 	pxy := ss.NewClient(
 		ss.NetProtocol(config.LocalNet),
 		config.LocalPort,
@@ -97,16 +94,14 @@ func NewSsClient(config *SsClientConfig) *SsClientHandle {
 		config.Password,
 		config.Crypt,
 	)
-	handle := &SsClientHandle{
-		Handle: Handle{
-			Config: config,
-			Proxy:  pxy,
-		},
+	handle := &Handle{
+		Config: config,
+		Proxy:  pxy,
 	}
 	return handle
 }
 
-func NewSsServer(config *SsServerConfig) *SsServerHandle {
+func NewSsServer(config *SsServerConfig) *Handle {
 	pxy := ss.NewServer(
 		ss.NetProtocol(config.ChannelNet),
 		config.Port,
@@ -114,42 +109,36 @@ func NewSsServer(config *SsServerConfig) *SsServerHandle {
 		config.Crypt,
 		config.Rate,
 	)
-	handle := &SsServerHandle{
-		Handle: Handle{
-			Config: config,
-			Proxy:  pxy,
-		},
+	handle := &Handle{
+		Config: config,
+		Proxy:  pxy,
 	}
 	return handle
 }
 
-func NewHttpReproxy(config *HttpReproxyConfig) *HttpReproxyHandle {
+func NewHttpReproxy(config *HttpReproxyConfig) *Handle {
 	pxy := proxy.NewHttpReproxy(
 		config.LocalPort,
 		config.ServerHost,
 		config.ServerPort,
 		config.Name,
 	)
-	handle := &HttpReproxyHandle{
-		Handle: Handle{
-			Config: config,
-			Proxy:  pxy,
-		},
+	handle := &Handle{
+		Config: config,
+		Proxy:  pxy,
 	}
 	return handle
 }
 
-func NewFtpProxy(config *FtpProxyConfig) *FtpProxyHandle {
+func NewFtpProxy(config *FtpProxyConfig) *Handle {
 	pxy := proxy.NewFtpProxy(
 		config.LocalPort,
 		config.ServerHost,
 		config.ServerPort,
 	)
-	handle := &FtpProxyHandle{
-		Handle: Handle{
-			Config: config,
-			Proxy:  pxy,
-		},
+	handle := &Handle{
+		Config: config,
+		Proxy:  pxy,
 	}
 	return handle
 }

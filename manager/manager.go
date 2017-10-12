@@ -59,7 +59,11 @@ func (this *Manager) GetHandles() map[uint]ProxyHandler {
 }
 
 func (this *Manager) FindProxyByPort(port uint) ProxyHandler {
-	return this.handles[port]
+	h, ok := this.handles[port]
+	if ok {
+		return h
+	}
+	return nil
 }
 
 func (this *Manager) DeleteByPort(port uint) {

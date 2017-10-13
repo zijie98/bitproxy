@@ -12,8 +12,8 @@ import (
 type ProxyStatus int
 
 const (
-	RUNING ProxyStatus = iota
-	STOP
+	STOP ProxyStatus = iota
+	RUNING
 )
 
 //	代理程序的接口
@@ -58,7 +58,11 @@ func (this *Handle) Start() error {
 }
 
 func (this *Handle) Stop() error {
-	this.status = STOP
+	if this.status == STOP {
+		return nil
+	} else {
+		this.status = STOP
+	}
 	return this.Proxy.Stop()
 }
 

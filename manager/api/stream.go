@@ -15,7 +15,7 @@ func CreateStream(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "bind json error " + err.Error()})
 		return
 	}
-	err = manager.Man.CreateProxy(&config).Start()
+	err = manager.Man.CreateProxy(&config, false).Start()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "create stream error " + err.Error()})
 		return
@@ -87,5 +87,5 @@ func modifyStream(config *manager.StreamProxyConfig) error {
 	if err != nil {
 		return err
 	}
-	return manager.Man.CreateProxy(config).Start()
+	return manager.Man.CreateProxy(config, true).Start()
 }

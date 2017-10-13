@@ -1,17 +1,17 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
-
-	"gopkg.in/gin-gonic/gin.v1"
 
 	"github.com/molisoft/bitproxy/manager"
 	"github.com/molisoft/bitproxy/utils"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 var password string
 
-func InitEngine() *gin.Engine {
+func initEngine() *gin.Engine {
 
 	router := gin.Default()
 	router.Use(validate)
@@ -44,12 +44,14 @@ func afterFunc(ctx *gin.Context) {
 }
 
 func Start(pwd string, port uint) error {
+	fmt.Println("Start Api service.. port", port)
 	password = pwd
 
 	gin.DefaultWriter = utils.NewLogger("api.log")
 	gin.DefaultErrorWriter = utils.NewLogger("api.error.log")
 
-	return InitEngine().Run(utils.JoinHostPort("", port))
+	server := initEngine()
+	return server.Run(utils.JoinHostPort("", port))
 }
 
 func validate(ctx *gin.Context) {

@@ -73,16 +73,16 @@ func initPid() {
 }
 
 func initApi() error {
-	if manager.Man.Config().Api != nil {
-		config := manager.Man.Config().Api
+	if manager.Man.Config.Api != nil {
+		config := manager.Man.Config.Api
 		return api.Start(config.Password, config.Port)
 	}
 	return nil
 }
 
 func initRedis() {
-	if manager.Man.Config().Redis != nil {
-		config := manager.Man.Config().Redis
+	if manager.Man.Config.Redis != nil {
+		config := manager.Man.Config.Redis
 		services.InitRedis(config.Host, config.Port)
 	}
 }

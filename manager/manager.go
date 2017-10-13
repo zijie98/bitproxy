@@ -23,6 +23,7 @@ const PID_FILENAME = "bitproxy.pid"
 
 type Manager struct {
 	handles       map[uint]ProxyHandler
+	Config        *ProxyConfig
 	ConfigPath    string
 	PidPath       string
 	WorkspacePath string
@@ -44,14 +45,11 @@ func New(app_path string) {
 		ConfigPath:    configPath,
 		PidPath:       pidPath,
 		WorkspacePath: workspacePath,
+		Config:        new(ProxyConfig),
 
 		handles: make(map[uint]ProxyHandler),
 		log:     utils.NewLogger("Manager"),
 	}
-}
-
-func (this *Manager) Config() *ProxyConfig {
-	return &Config
 }
 
 func (this *Manager) GetHandles() map[uint]ProxyHandler {
@@ -67,37 +65,41 @@ func (this *Manager) FindProxyByPort(port uint) ProxyHandler {
 }
 
 func (this *Manager) DeleteByPort(port uint) {
+	h := this.FindProxyByPort(port)
+	if h != nil {
+		h.Stop()
+	}
 	delete(this.handles, port)
 }
 
 //	将配置文件格式化到配置
 //
 func (this *Manager) ParseConfig() (err error) {
-	err = configor.Load(&Config, this.ConfigPath)
+	err = configor.Load(this.Config, this.ConfigPath)
 	if err != nil {
 		return err
 	}
-	if Config.HttpReproxy != nil {
-		for _, cfg := range Config.HttpReproxy {
-			this.CreateProxy(&cfg)
+	if this.Config.HttpReproxy != nil {
+		for _, cfg := range this.Config.HttpReproxy {
+			this.CreateProxy(&cfg, false)
 		}
 	}
-	if Config.Stream != nil {
-		for _, cfg := range Config.Stream {
-			this.CreateProxy(&cfg)
+	if this.Config.Stream != nil {
+		for _, cfg := range this.Config.Stream {
+			this.CreateProxy(&cfg, false)
 		}
 	}
-	if Config.SsClient != nil {
-		this.CreateProxy(Config.SsClient)
+	if this.Config.SsClient != nil {
+		this.CreateProxy(this.Config.SsClient, false)
 	}
-	if Config.SsServer != nil {
-		for _, cfg := range Config.SsServer {
-			this.CreateProxy(&cfg)
+	if this.Config.SsServer != nil {
+		for _, cfg := range this.Config.SsServer {
+			this.CreateProxy(&cfg, false)
 		}
 	}
-	if Config.FtpProxy != nil {
-		for _, cfg := range Config.FtpProxy {
-			this.CreateProxy(&cfg)
+	if this.Config.FtpProxy != nil {
+		for _, cfg := range this.Config.FtpProxy {
+			this.CreateProxy(&cfg, false)
 		}
 	}
 	return
@@ -106,11 +108,13 @@ func (this *Manager) ParseConfig() (err error) {
 //	保存配置到配置文件
 //
 func (this *Manager) SaveToConfig() error {
-	b, err := Config.toBytes()
+	b, err := this.Config.toBytes()
 	if err != nil {
 		this.log.Info("格式化配置{", this.ConfigPath, "}出错:", err)
 		return err
 	}
+	os.Remove(this.ConfigPath)
+
 	file, err := os.OpenFile(this.ConfigPath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		this.log.Info("创建配置文件失败: ", err)
@@ -161,18 +165,33 @@ func (this *Manager) Start(port uint) {
 	}
 }
 
-func (this *Manager) CreateProxy(config interface{}) (handler ProxyHandler) {
+func (this *Manager) CreateProxy(config interface{}, appendToConfig bool) (handler ProxyHandler) {
 	switch config.(type) {
 	case *StreamProxyConfig:
 		handler = NewStreamProxy(config.(*StreamProxyConfig))
+		if appendToConfig {
+			this.Config.Stream = append(this.Config.Stream, *config.(*StreamProxyConfig))
+		}
 	case *SsClientConfig:
 		handler = NewSsClient(config.(*SsClientConfig))
+		if appendToConfig {
+			this.Config.SsClient = config.(*SsClientConfig)
+		}
 	case *SsServerConfig:
 		handler = NewSsServer(config.(*SsServerConfig))
+		if appendToConfig {
+			this.Config.SsServer = append(this.Config.SsServer, *config.(*SsServerConfig))
+		}
 	case *HttpReproxyConfig:
 		handler = NewHttpReproxy(config.(*HttpReproxyConfig))
+		if appendToConfig {
+			this.Config.HttpReproxy = append(this.Config.HttpReproxy, *config.(*HttpReproxyConfig))
+		}
 	case *FtpProxyConfig:
 		handler = NewFtpProxy(config.(*FtpProxyConfig))
+		if appendToConfig {
+			this.Config.FtpProxy = append(this.Config.FtpProxy, *config.(*FtpProxyConfig))
+		}
 	}
 	if handler != nil {
 		this.handles[handler.Port()] = handler

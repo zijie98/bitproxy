@@ -66,10 +66,48 @@ func (this *Manager) FindProxyByPort(port uint) ProxyHandler {
 
 func (this *Manager) DeleteByPort(port uint) {
 	h := this.FindProxyByPort(port)
-	if h != nil {
-		h.Stop()
+	if h == nil {
+		return
 	}
+	h.Stop()
 	delete(this.handles, port)
+
+	if this.Config.HttpReproxy != nil {
+		for i, cfg := range this.Config.HttpReproxy {
+			if cfg.LocalPort == port {
+				this.Config.HttpReproxy = append(this.Config.HttpReproxy[:i], this.Config.HttpReproxy[i+1:]...)
+				return
+			}
+		}
+	}
+	if this.Config.FtpProxy != nil {
+		for i, cfg := range this.Config.FtpProxy {
+			if cfg.LocalPort == port {
+				this.Config.FtpProxy = append(this.Config.FtpProxy[:i], this.Config.FtpProxy[i+1:]...)
+				return
+			}
+		}
+	}
+	if this.Config.SsServer != nil {
+		for i, cfg := range this.Config.SsServer {
+			if cfg.Port == port {
+				this.Config.SsServer = append(this.Config.SsServer[:i], this.Config.SsServer[i+1:]...)
+				return
+			}
+		}
+	}
+	if this.Config.Stream != nil {
+		for i, cfg := range this.Config.Stream {
+			if cfg.LocalPort == port {
+				this.Config.Stream = append(this.Config.Stream[:i], this.Config.Stream[i+1:]...)
+				return
+			}
+		}
+	}
+	if this.Config.SsClient != nil && this.Config.SsClient.LocalPort == port {
+		this.Config.SsClient = nil
+		return
+	}
 }
 
 //	将配置文件格式化到配置
@@ -105,6 +143,40 @@ func (this *Manager) ParseConfig() (err error) {
 	return
 }
 
+func (this *Manager) CreateProxy(config interface{}, appendToConfig bool) (handler ProxyHandler) {
+	switch config.(type) {
+	case *StreamProxyConfig:
+		handler = NewStreamProxy(config.(*StreamProxyConfig))
+		if appendToConfig {
+			this.Config.Stream = append(this.Config.Stream, *config.(*StreamProxyConfig))
+		}
+	case *SsClientConfig:
+		handler = NewSsClient(config.(*SsClientConfig))
+		if appendToConfig {
+			this.Config.SsClient = config.(*SsClientConfig)
+		}
+	case *SsServerConfig:
+		handler = NewSsServer(config.(*SsServerConfig))
+		if appendToConfig {
+			this.Config.SsServer = append(this.Config.SsServer, *config.(*SsServerConfig))
+		}
+	case *HttpReproxyConfig:
+		handler = NewHttpReproxy(config.(*HttpReproxyConfig))
+		if appendToConfig {
+			this.Config.HttpReproxy = append(this.Config.HttpReproxy, *config.(*HttpReproxyConfig))
+		}
+	case *FtpProxyConfig:
+		handler = NewFtpProxy(config.(*FtpProxyConfig))
+		if appendToConfig {
+			this.Config.FtpProxy = append(this.Config.FtpProxy, *config.(*FtpProxyConfig))
+		}
+	}
+	if handler != nil {
+		this.handles[handler.Port()] = handler
+	}
+	return
+}
+
 //	保存配置到配置文件
 //
 func (this *Manager) SaveToConfig() error {
@@ -115,7 +187,7 @@ func (this *Manager) SaveToConfig() error {
 	}
 	os.Remove(this.ConfigPath)
 
-	file, err := os.OpenFile(this.ConfigPath, os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(this.ConfigPath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		this.log.Info("创建配置文件失败: ", err)
 		return err
@@ -163,38 +235,4 @@ func (this *Manager) Start(port uint) {
 	if handler != nil {
 		go handler.Start()
 	}
-}
-
-func (this *Manager) CreateProxy(config interface{}, appendToConfig bool) (handler ProxyHandler) {
-	switch config.(type) {
-	case *StreamProxyConfig:
-		handler = NewStreamProxy(config.(*StreamProxyConfig))
-		if appendToConfig {
-			this.Config.Stream = append(this.Config.Stream, *config.(*StreamProxyConfig))
-		}
-	case *SsClientConfig:
-		handler = NewSsClient(config.(*SsClientConfig))
-		if appendToConfig {
-			this.Config.SsClient = config.(*SsClientConfig)
-		}
-	case *SsServerConfig:
-		handler = NewSsServer(config.(*SsServerConfig))
-		if appendToConfig {
-			this.Config.SsServer = append(this.Config.SsServer, *config.(*SsServerConfig))
-		}
-	case *HttpReproxyConfig:
-		handler = NewHttpReproxy(config.(*HttpReproxyConfig))
-		if appendToConfig {
-			this.Config.HttpReproxy = append(this.Config.HttpReproxy, *config.(*HttpReproxyConfig))
-		}
-	case *FtpProxyConfig:
-		handler = NewFtpProxy(config.(*FtpProxyConfig))
-		if appendToConfig {
-			this.Config.FtpProxy = append(this.Config.FtpProxy, *config.(*FtpProxyConfig))
-		}
-	}
-	if handler != nil {
-		this.handles[handler.Port()] = handler
-	}
-	return
 }

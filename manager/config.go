@@ -5,6 +5,7 @@
 package manager
 
 import (
+	"bytes"
 	"encoding/json"
 )
 
@@ -85,6 +86,14 @@ type ProxyConfig struct {
 //	将配置格式化为json字符串
 //
 func (this ProxyConfig) toBytes() (b []byte, err error) {
-	b, err = json.Marshal(this)
+	var dst bytes.Buffer
+
+	if b, err = json.Marshal(this); err != nil {
+		return nil, err
+	}
+	if err = json.Indent(&dst, b, "", "  "); err != nil {
+		return nil, err
+	}
+	b = dst.Bytes()
 	return
 }

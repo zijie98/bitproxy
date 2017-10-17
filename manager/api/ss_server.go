@@ -16,34 +16,38 @@ func CreateSsServer(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
+	proxy := manager.Man.CreateProxy(server_config, true)
 	e := make(chan error)
 	go func() {
-		e <- manager.Man.CreateProxy(server_config, true).Start()
+		e <- proxy.Start()
 	}()
 	select {
 	case err = <-e:
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		}
 		return
-	case <-time.After(10 * time.Second):
+	case <-time.After(2 * time.Second):
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
+		return
 	}
 }
 
 func ActionSsServer(ctx *gin.Context) {
-	var server_config manager.SsServerConfig
-	err := ctx.BindJSON(&server_config)
+	var serverConfig manager.SsServerConfig
+	err := ctx.BindJSON(&serverConfig)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 	switch ctx.Param("action") {
 	case "stop":
-		err = stopSs(&server_config)
+		err = stopSs(&serverConfig)
 	case "start":
-		err = startSs(&server_config)
+		err = startSs(&serverConfig)
 	case "traffic":
 		var t uint64
-		t, err = trafficSs(&server_config)
+		t, err = trafficSs(&serverConfig)
 		ctx.JSON(http.StatusOK, gin.H{
 			"traffic": t,
 			"unit":    "byte",
@@ -51,9 +55,7 @@ func ActionSsServer(ctx *gin.Context) {
 		})
 		return
 	case "remove":
-		err = removeSs(&server_config)
-	case "modify":
-		err = modifySs(&server_config)
+		err = removeSs(&serverConfig)
 	default:
 		err = errors.New("not found action")
 	}
@@ -94,12 +96,4 @@ func trafficSs(config *manager.SsServerConfig) (uint64, error) {
 func removeSs(config *manager.SsServerConfig) error {
 	manager.Man.DeleteByPort(config.Port)
 	return nil
-}
-
-func modifySs(config *manager.SsServerConfig) error {
-	err := removeSs(config)
-	if err != nil {
-		return err
-	}
-	return manager.Man.CreateProxy(config, true).Start()
 }

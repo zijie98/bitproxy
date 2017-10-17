@@ -173,12 +173,9 @@ func (this *SSServer) Start() error {
 	}
 	this.log.Info("Listen port", this.port)
 
-	for {
+	for !this.done {
 		conn, err := this.AcceptClient()
 		if err != nil {
-			if this.done {
-				break
-			}
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
 				this.log.Info("Temporary error when accepting new connections: ", netErr)
 				time.Sleep(time.Second)

@@ -143,11 +143,10 @@ func (this *SSServer) AcceptClient() (net.Conn, error) {
 			return nil, err
 		}
 		conn.SetStreamMode(true)
-		conn.SetNoDelay(1, 20, 1, 0)
+		conn.SetNoDelay(1, 20, 2, 1)
 		conn.SetMtu(1350)
 		conn.SetWindowSize(1024, 1024)
 		conn.SetACKNoDelay(true)
-		conn.SetKeepAlive(10)
 
 		this.log.Info("Accept address:", conn.RemoteAddr())
 		return conn, nil

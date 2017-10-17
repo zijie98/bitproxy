@@ -36,8 +36,8 @@ func testCrypt(t *testing.T, method string) {
 	}
 
 	if method == CryptXor {
-		stream.XORKeyStream(buff, buff)
-		stream.XORKeyStream(buff, buff)
+		stream.XORKeyStream(buff2, buff)
+		stream.XORKeyStream(buff, buff2)
 	} else {
 		stream.XORKeyStream(buff2, buff)
 		stream, err = cipher.newStream(key, iv, Decrypt)

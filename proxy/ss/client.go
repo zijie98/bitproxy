@@ -99,11 +99,10 @@ func (this *SSClient) getServerConn() (net.Conn, error) {
 			return nil, errors.New("SSCLIENT: kcp.DialWithOptions error " + err.Error())
 		}
 		conn.SetStreamMode(true)
-		conn.SetNoDelay(1, 20, 1, 0)
+		conn.SetNoDelay(1, 20, 2, 1)
 		conn.SetMtu(1350)
 		conn.SetWindowSize(1024, 1024)
 		conn.SetACKNoDelay(true)
-		conn.SetKeepAlive(10)
 		return conn, nil
 	} else {
 		return nil, errors.New("Not found protocol: " + string(this.channel_net) + "?")

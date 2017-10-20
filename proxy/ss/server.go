@@ -84,6 +84,9 @@ func (this *SSServer) handle(client net.Conn) {
 	if err != nil {
 		this.log.Info("NewCryptConn err ", err)
 	}
+	defer func() {
+		client.Close()
+	}()
 
 	raw_remote_addr, extra, err := this.getRequest(client)
 	if err != nil {
@@ -96,6 +99,10 @@ func (this *SSServer) handle(client net.Conn) {
 		this.log.Info("Dial to raw host err ", err, raw_remote_addr)
 		return
 	}
+
+	defer func() {
+		remote.Close()
+	}()
 
 	if extra != nil {
 		if _, err = remote.Write(extra); err != nil {

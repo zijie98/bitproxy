@@ -15,10 +15,8 @@ import (
 	"net"
 
 	"github.com/kataras/go-errors"
-	"github.com/xtaci/kcp-go"
-	//"github.com/xtaci/smux"
-
 	"github.com/molisoft/bitproxy/utils"
+	"github.com/xtaci/kcp-go"
 )
 
 type SSClient struct {
@@ -32,7 +30,9 @@ type SSClient struct {
 	log         *utils.Logger
 }
 
-func (this *SSClient) handle(client io.ReadWriter) {
+func (this *SSClient) handle(client io.ReadWriteCloser) {
+	defer client.Close()
+
 	buf := make([]byte, 32) // 32 byte
 	_, err := client.Read(buf)
 	if err != nil {
@@ -77,6 +77,7 @@ func (this *SSClient) handle(client io.ReadWriter) {
 		this.log.Info("NewCryptConn err ", err)
 		return
 	}
+	defer server.Close()
 
 	// ss协议中，将把浏览器的请求发给服务器
 	server.Write(raw_addr)

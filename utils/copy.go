@@ -20,22 +20,22 @@ type BeforeCallBackFunc func()
 type ReadNotify chan int64
 
 func CopyWithBefore(dst io.Writer, src io.Reader, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc) (written int64, err error) {
-	return Copy(dst, src, nil, beforeReadFunc, beforeWriteFunc, nil, nil, nil, nil)
+	return Copy(dst, src, nil, beforeReadFunc, beforeWriteFunc, nil, nil, nil, 0)
 }
 
 func CopyWithAfter(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc) (written int64, err error) {
-	return Copy(dst, src, nil, nil, nil, afterReadFunc, afterWriteFunc, nil, nil)
+	return Copy(dst, src, nil, nil, nil, afterReadFunc, afterWriteFunc, nil, 0)
 }
 
 func CopyWithNone(dst io.Writer, src io.Reader) (written int64, err error) {
-	return Copy(dst, src, nil, nil, nil, nil, nil, nil, nil)
+	return Copy(dst, src, nil, nil, nil, nil, nil, nil, 0)
 }
 
 func CopyWithTimeout(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, timeout *time.Time) (w int64, err error) {
-	return Copy(dst, src, nil, nil, nil, afterReadFunc, nil, nil, timeout)
+	return Copy(dst, src, nil, nil, nil, afterReadFunc, nil, nil, 0)
 }
 
-func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc, exitedFunc AfterCallbackFunc, timeout *time.Time) (written int64, err error) {
+func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc, exitedFunc AfterCallbackFunc, timeout time.Duration) (written int64, err error) {
 	buf := CopyPool.Get(CopyPoolSize)
 	defer CopyPool.Put(buf)
 	defer func() {
@@ -44,8 +44,8 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 		}
 	}()
 	for {
-		if timeout != nil {
-			SetTimeout(src, *timeout)
+		if timeout != 0 {
+			SetTimeout(src, timeout)
 		}
 		if beforeReadFunc != nil {
 			beforeReadFunc()
@@ -86,10 +86,11 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 	return written, err
 }
 
-func SetTimeout(src io.Reader, time time.Time) {
+func SetTimeout(src io.Reader, d time.Duration) {
+	t := time.Now()
 	switch src.(type) {
 	case net.Conn:
-		src.(net.Conn).SetReadDeadline(time)
+		src.(net.Conn).SetReadDeadline(t.Add(d))
 	}
 }
 

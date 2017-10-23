@@ -125,7 +125,7 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 	}
 
 	var copy_data = func(dsc net.Conn, src net.Conn, limit *utils.Limit) {
-		_, err := utils.Copy(dsc, src, limit, nil, nil, readAfterFunc, nil, this.trafficStats, nil)
+		_, err := utils.Copy(dsc, src, limit, nil, nil, readAfterFunc, nil, this.trafficStats, 0)
 		if err != nil {
 			done <- true
 		}

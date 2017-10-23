@@ -112,7 +112,9 @@ func (this *SSServer) handle(client net.Conn) {
 	}
 	limit := &utils.Limit{Rate: this.rate}
 	var trafficStats = func(n int64, e error) {
-		services.AddTrafficStats(this.port, n)
+		if e == nil {
+			services.AddTrafficStats(this.port, n)
+		}
 	}
 	go utils.Copy(client, remote, limit, nil, nil, nil, nil, trafficStats, 75*time.Second)
 	utils.Copy(remote, client, nil, nil, nil, nil, nil, nil, 0)

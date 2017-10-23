@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"github.com/kataras/go-errors"
 	"github.com/molisoft/bitproxy/utils"
@@ -82,8 +83,10 @@ func (this *SSClient) handle(client io.ReadWriteCloser) {
 	// ss协议中，将把浏览器的请求发给服务器
 	server.Write(raw_addr)
 
-	go utils.CopyWithNone(client, server)
-	utils.CopyWithNone(server, client)
+	go utils.CopyWithTimeout(client, server, nil, 75*time.Second)
+	utils.CopyWithTimeout(server, client, nil, 0)
+
+	this.log.Info("handle is closed")
 }
 
 func (this *SSClient) getServerConn() (net.Conn, error) {

@@ -31,8 +31,8 @@ func CopyWithNone(dst io.Writer, src io.Reader) (written int64, err error) {
 	return Copy(dst, src, nil, nil, nil, nil, nil, nil, 0)
 }
 
-func CopyWithTimeout(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, timeout *time.Time) (w int64, err error) {
-	return Copy(dst, src, nil, nil, nil, afterReadFunc, nil, nil, 0)
+func CopyWithTimeout(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, timeout time.Duration) (w int64, err error) {
+	return Copy(dst, src, nil, nil, nil, afterReadFunc, nil, nil, timeout)
 }
 
 func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc, exitedFunc AfterCallbackFunc, timeout time.Duration) (written int64, err error) {

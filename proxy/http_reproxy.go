@@ -102,9 +102,9 @@ func (this *HttpReproxy) Start() error {
 	s := &fasthttp.Server{
 		Handler:              this.reverseProxyHandler,
 		MaxKeepaliveDuration: 60 * time.Second,
-		ReadTimeout:          60 * 3 * time.Second,
-		WriteTimeout:         60 * 3 * time.Second,
-		MaxConnsPerIP:        30,
+		ReadTimeout:          60 * time.Second,
+		WriteTimeout:         60 * time.Second,
+		MaxConnsPerIP:        64,
 		Logger:               utils.NewLogger("HttpReverseProxy"),
 	}
 	err := s.ListenAndServe(utils.JoinHostPort("", this.local_port))

@@ -30,10 +30,10 @@ var ReproxyUserAgent = "BitProxy"
 func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	this.log.Info(ctx.RemoteIP().String(), " - ", string(ctx.Method()), " - ", ctx.URI().String(), " - ", string(ctx.UserAgent()))
 
-	if this.isBlack(ctx.RemoteAddr()) {
-		this.log.Info("Blocked ", ctx.RemoteIP())
-		return
-	}
+	//if this.isBlack(ctx.RemoteAddr()) {
+	//	this.log.Info("Blocked ", ctx.RemoteIP())
+	//	return
+	//}
 
 	retry := 0
 	retry_count := 2

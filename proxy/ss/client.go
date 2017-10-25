@@ -83,8 +83,8 @@ func (this *SSClient) handle(client io.ReadWriteCloser) {
 	// ss协议中，将把浏览器的请求发给服务器
 	server.Write(raw_addr)
 
-	go utils.CopyWithTimeout(server, client, nil, 75*time.Second)
-	utils.CopyWithTimeout(client, server, nil, 0)
+	go utils.CopyWithTimeout(server, client, nil, 600*time.Second)
+	utils.CopyWithTimeout(client, server, nil, 600*time.Second)
 
 	this.log.Info("handle is closed")
 }

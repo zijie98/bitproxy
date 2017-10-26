@@ -16,6 +16,7 @@ func CreateSsServer(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
+	stopSs(server_config)
 	proxy := manager.Man.CreateProxy(server_config, true)
 	e := make(chan error)
 	go func() {

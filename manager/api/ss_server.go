@@ -77,6 +77,9 @@ func stopSs(config *manager.SsServerConfig) error {
 
 func startSs(config *manager.SsServerConfig) error {
 	proxy := manager.Man.FindProxyByPort(config.Port)
+	if proxy == nil {
+		return errors.New("无法找到该ss代理")
+	}
 	err := make(chan error)
 	go func() {
 		err <- proxy.Start()
@@ -91,6 +94,9 @@ func startSs(config *manager.SsServerConfig) error {
 
 func trafficSs(config *manager.SsServerConfig) (uint64, error) {
 	proxy := manager.Man.FindProxyByPort(config.Port)
+	if proxy == nil {
+		return 0, errors.New("无法找到该ss代理")
+	}
 	return proxy.GetTraffic()
 }
 

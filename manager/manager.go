@@ -9,17 +9,12 @@ package manager
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/jinzhu/configor"
 	"github.com/molisoft/bitproxy/utils"
 )
 
 var Man *Manager
-
-const ETC_PATH = "/etc"
-const CONFIG_FILENAME = "config.json"
-const PID_FILENAME = "bitproxy.pid"
 
 type Manager struct {
 	handles       map[uint]ProxyHandler
@@ -31,20 +26,11 @@ type Manager struct {
 	log *utils.Logger
 }
 
-func New(app_path string) {
-	workspacePath := app_path
-
-	pidPath := filepath.Join(workspacePath, PID_FILENAME)
-
-	configPath := filepath.Join(workspacePath, CONFIG_FILENAME)
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		configPath = filepath.Join(ETC_PATH, CONFIG_FILENAME)
-	}
-
+func New(appPath, pidPath, configPath string) {
 	Man = &Manager{
 		ConfigPath:    configPath,
 		PidPath:       pidPath,
-		WorkspacePath: workspacePath,
+		WorkspacePath: appPath,
 		Config:        new(ProxyConfig),
 
 		handles: make(map[uint]ProxyHandler),

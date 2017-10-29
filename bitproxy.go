@@ -6,20 +6,31 @@
 package main
 
 import (
+	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"syscall"
 
 	"github.com/molisoft/bitproxy/manager"
 	"github.com/molisoft/bitproxy/manager/api"
 	"github.com/molisoft/bitproxy/services"
 	"github.com/molisoft/bitproxy/utils"
+	"io"
 )
 
-var app_path string
+const ETC_PATH = "/etc"
+const CONFIG_FILENAME = "config.json"
+const PID_FILENAME = "bitproxy.pid"
+
+var AppPath string
+var AppPidPath string
+var ConfigPath string
 var log *utils.Logger
 
 func listenSignal() {
@@ -40,30 +51,30 @@ func listenSignal() {
 
 func initEnv() {
 	path, _ := exec.LookPath(os.Args[0])
-	app_path = filepath.Dir(path)
+	AppPath = filepath.Dir(path)
 }
 
 func initLog() {
-	utils.LogPath = app_path
+	utils.LogPath = AppPath
 	log = utils.NewLogger("Main")
 }
 
-// func initFlag() {
-// 	config_path := flag.String("c", manager.CONFIG_FILENAME, "配置文件")
-// 	pid_path := flag.String("p", manager.Man.PidPath, "进程id路径")
-// 	flag.Parse()
-
-// 	if _, err := os.Stat(*config_path); os.IsNotExist(err) {
-// 		manager.Man.ConfigPath = *config_path
-// 	}
-// 	manager.Man.PidPath = *pid_path
-// }
-
 func initPid() {
-	if _, err := os.Stat(manager.Man.PidPath); os.IsExist(err) {
+	file, err := os.Open(manager.Man.PidPath)
+	if err == nil {
+		pid, err := bufio.NewReader(file).ReadString(' ')
+		if err == io.EOF {
+			id, err := strconv.Atoi(pid)
+			if err == nil {
+				fmt.Println("kill old process ", id)
+				syscall.Kill(id, syscall.SIGINT)
+			}
+		}
+		file.Close()
 		os.Remove(manager.Man.PidPath)
 	}
-	file, err := os.OpenFile(manager.Man.PidPath, os.O_CREATE|os.O_WRONLY, 0644)
+
+	file, err = os.OpenFile(manager.Man.PidPath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("写pid文件错误：", err)
 		return
@@ -102,16 +113,30 @@ func initPublicIp() {
 	}
 }
 
+func initFlag() {
+	pidPath := filepath.Join(AppPath, PID_FILENAME)
+	configPath := filepath.Join(AppPath, CONFIG_FILENAME)
+
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		configPath = filepath.Join(ETC_PATH, CONFIG_FILENAME)
+	}
+	if _, err := os.Stat(pidPath); os.IsNotExist(err) {
+		pidPath = filepath.Join(ETC_PATH, PID_FILENAME)
+	}
+
+	flag.StringVar(&ConfigPath, "c", configPath, "配置文件")
+	flag.StringVar(&AppPidPath, "p", pidPath, "进程id路径")
+	flag.Parse()
+}
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	initEnv()
-
 	initLog()
+	initFlag()
 
-	manager.New(app_path)
-
-	//initFlag()
+	manager.New(AppPath, AppPidPath, ConfigPath)
 
 	err := manager.Man.ParseConfig()
 	if err != nil {

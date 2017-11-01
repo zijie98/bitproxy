@@ -39,15 +39,6 @@ const (
 	CLIENT_RAW_ADDR             = 4
 )
 
-type NetProtocol string
-
-// 连接类型
-const (
-	TCP_PROTOCOL NetProtocol = "tcp"
-	UDP_PROTOCOL NetProtocol = "udp"
-	KCP_PROTOCOL NetProtocol = "kcp"
-)
-
 var (
 	IvPool utils.BytePool // 建立IV使用的内存池
 	RWPool utils.BytePool // 建立读写流内存池

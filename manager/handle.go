@@ -16,30 +16,11 @@ const (
 	RUNING
 )
 
-//	代理程序的接口
-//
-type Proxyer interface {
-	Start() error
-	Stop() error
-	LocalPort() uint
-	Traffic() (uint64, error)
-}
-
-//	句柄接口
-//
-type ProxyHandler interface {
-	Port() uint
-	Start() error
-	Stop() error
-	GetConfig() interface{}
-	GetTraffic() (uint64, error)
-}
-
 //	句柄
 //
 type Handle struct {
 	Config interface{}
-	Proxy  Proxyer
+	Proxy  proxy.Proxyer
 
 	status ProxyStatus
 }
@@ -76,7 +57,7 @@ func (this *Handle) GetTraffic() (uint64, error) {
 
 func NewStreamProxy(config *StreamProxyConfig) *Handle {
 	pxy := proxy.NewStreamProxy(
-		ss.NetProtocol(config.LocalNet),
+		proxy.NetProtocol(config.LocalNet),
 		config.LocalPort,
 		config.ServerHost,
 		config.ServerPort,
@@ -91,10 +72,10 @@ func NewStreamProxy(config *StreamProxyConfig) *Handle {
 
 func NewSsClient(config *SsClientConfig) *Handle {
 	pxy := ss.NewClient(
-		ss.NetProtocol(config.LocalNet),
+		proxy.NetProtocol(config.LocalNet),
 		config.LocalPort,
 		utils.JoinHostPort(config.ServerHost, config.ServerPort),
-		ss.NetProtocol(config.ChannelNet),
+		proxy.NetProtocol(config.ChannelNet),
 		config.Password,
 		config.Crypt,
 	)
@@ -107,7 +88,7 @@ func NewSsClient(config *SsClientConfig) *Handle {
 
 func NewSsServer(config *SsServerConfig) *Handle {
 	pxy := ss.NewServer(
-		ss.NetProtocol(config.ChannelNet),
+		proxy.NetProtocol(config.ChannelNet),
 		config.Port,
 		config.Password,
 		config.Crypt,

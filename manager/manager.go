@@ -11,13 +11,14 @@ import (
 	"os"
 
 	"github.com/jinzhu/configor"
+	"github.com/molisoft/bitproxy/proxy"
 	"github.com/molisoft/bitproxy/utils"
 )
 
 var Man *Manager
 
 type Manager struct {
-	handles       map[uint]ProxyHandler
+	handles       map[uint]proxy.ProxyHandler
 	Config        *ProxyConfig
 	ConfigPath    string
 	PidPath       string
@@ -33,16 +34,16 @@ func New(appPath, pidPath, configPath string) {
 		WorkspacePath: appPath,
 		Config:        new(ProxyConfig),
 
-		handles: make(map[uint]ProxyHandler),
+		handles: make(map[uint]proxy.ProxyHandler),
 		log:     utils.NewLogger("Manager"),
 	}
 }
 
-func (this *Manager) GetHandles() map[uint]ProxyHandler {
+func (this *Manager) GetHandles() map[uint]proxy.ProxyHandler {
 	return this.handles
 }
 
-func (this *Manager) FindProxyByPort(port uint) ProxyHandler {
+func (this *Manager) FindProxyByPort(port uint) proxy.ProxyHandler {
 	h, ok := this.handles[port]
 	if ok {
 		return h
@@ -129,7 +130,7 @@ func (this *Manager) ParseConfig() (err error) {
 	return
 }
 
-func (this *Manager) CreateProxy(config interface{}, appendToConfig bool) (handler ProxyHandler) {
+func (this *Manager) CreateProxy(config interface{}, appendToConfig bool) (handler proxy.ProxyHandler) {
 	switch config.(type) {
 	case *StreamProxyConfig:
 		handler = NewStreamProxy(config.(*StreamProxyConfig))

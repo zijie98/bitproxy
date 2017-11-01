@@ -14,9 +14,9 @@ import (
 )
 
 type FtpProxy struct {
-	local_port  uint
-	remote_host string
-	remote_port uint
+	localPort  uint
+	remoteHost string
+	remotePort uint
 
 	done bool
 
@@ -115,37 +115,37 @@ var errQuit = errors.New("Quit")
 var errNotMatch = errors.New("Not match to the returned")
 var errCommand = errors.New("Error command")
 
-func (this *FtpProxy) handle(local_conn net.Conn) {
+func (this *FtpProxy) handle(localConn net.Conn) {
 	defer func() {
-		err := local_conn.Close()
+		err := localConn.Close()
 		if err != nil {
 			this.log.Info("local_conn close error ", err.Error())
 		}
 	}()
 
-	remote_conn, err := net.DialTimeout("tcp", utils.JoinHostPort(this.remote_host, this.remote_port), 30*time.Second)
+	remoteConn, err := net.DialTimeout("tcp", utils.JoinHostPort(this.remoteHost, this.remotePort), 30*time.Second)
 	if err != nil {
 		this.log.Info("Dial to remote host error: ", err)
 		return
 	}
 	defer func() {
-		err := remote_conn.Close()
+		err := remoteConn.Close()
 		if err != nil {
 			this.log.Info("remote_conn close error ", err.Error())
 		}
 	}()
 
-	var read_notify = make(utils.ReadNotify)
+	var readNotify = make(utils.ReadNotify)
 	var done = make(chan bool, 5)
 	var closed = false
-	var command_mark FtpCommandFlag
+	var commandMark FtpCommandFlag
 
 	finish := func() {
 		closed = true
 		done <- true
 	}
 	notify := func(n int64, err error) {
-		read_notify <- n
+		readNotify <- n
 	}
 
 	go func() {
@@ -154,23 +154,23 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 			case <-time.After(60 * 2 * time.Second):
 				finish()
 				return
-			case <-read_notify:
+			case <-readNotify:
 			}
 		}
 	}()
 
 	// remote -> self -> local
 	go func() {
-		var pasv_resp *FtpReturn
-		var pasv_server_conn net.Conn
-		var pasv_client_conn net.Conn
-		remote := bufio.NewReader(remote_conn)
+		var pasvResp *FtpReturn
+		var pasvServerConn net.Conn
+		var pasvClientConn net.Conn
+		remote := bufio.NewReader(remoteConn)
 		defer func() {
-			if pasv_server_conn != nil {
-				pasv_server_conn.Close()
+			if pasvServerConn != nil {
+				pasvServerConn.Close()
 			}
-			if pasv_client_conn != nil {
-				pasv_client_conn.Close()
+			if pasvClientConn != nil {
+				pasvClientConn.Close()
 			}
 		}()
 		for !closed {
@@ -178,7 +178,7 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 			if err != nil {
 				break
 			}
-			read_notify <- 0
+			readNotify <- 0
 			resp, str, err := this.parseResult(str)
 			if err != nil && err != errNotMatch {
 				this.log.Info("Parse return error: ", err)
@@ -190,57 +190,57 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 			}
 			if resp != nil {
 				if resp.IsPassiveMode() {
-					pasv_resp = resp
+					pasvResp = resp
 					go func() {
-						pasv_client_conn, err = this.listenPasvConnFromClient(resp)
+						pasvClientConn, err = this.listenPasvConnFromClient(resp)
 						if err != nil {
 							this.log.Info("Lisent client conn error :", err)
 							return
 						}
-						pasv_server_conn, err = this.dialToServer(resp)
+						pasvServerConn, err = this.dialToServer(resp)
 						if err != nil {
 							this.log.Info("Dial to pasv ftp server error: ", err)
 							return
 						}
 					}()
 				}
-				if pasv_resp != nil && resp.IsOpening() {
-					if command_mark.lastIsDownload() {
+				if pasvResp != nil && resp.IsOpening() {
+					if commandMark.lastIsDownload() {
 						go func() {
-							if pasv_client_conn == nil || pasv_server_conn == nil {
+							if pasvClientConn == nil || pasvServerConn == nil {
 								return
 							}
-							_, e := utils.CopyWithAfter(pasv_client_conn, pasv_server_conn, notify, notify)
+							_, e := utils.CopyWithAfter(pasvClientConn, pasvServerConn, notify, notify)
 							if e != nil {
-								pasv_server_conn.Close()
-								pasv_server_conn = nil
-								pasv_client_conn.Close()
-								pasv_client_conn = nil
+								pasvServerConn.Close()
+								pasvServerConn = nil
+								pasvClientConn.Close()
+								pasvClientConn = nil
 							}
 						}()
 					} else {
 						go func() {
-							if pasv_client_conn == nil || pasv_server_conn == nil {
+							if pasvClientConn == nil || pasvServerConn == nil {
 								return
 							}
-							_, e := utils.CopyWithAfter(pasv_server_conn, pasv_client_conn, notify, notify)
+							_, e := utils.CopyWithAfter(pasvServerConn, pasvClientConn, notify, notify)
 							if e != nil {
-								pasv_server_conn.Close()
-								pasv_server_conn = nil
-								pasv_client_conn.Close()
-								pasv_client_conn = nil
+								pasvServerConn.Close()
+								pasvServerConn = nil
+								pasvClientConn.Close()
+								pasvClientConn = nil
 							}
 						}()
 					}
 				}
 			}
-			local_conn.Write(str)
+			localConn.Write(str)
 		}
 	}()
 
 	// local -> self -> remote
 	go func() {
-		local := bufio.NewReader(local_conn)
+		local := bufio.NewReader(localConn)
 		for !closed {
 			str, err := local.ReadBytes('\n')
 			if err != nil {
@@ -254,14 +254,14 @@ func (this *FtpProxy) handle(local_conn net.Conn) {
 			if command.isQuit() {
 				return
 			}
-			command_mark.Mark(command)
-			remote_conn.Write(str)
+			commandMark.Mark(command)
+			remoteConn.Write(str)
 		}
 	}()
 	//go copy_data(remote_conn, local_conn)
 
 	<-done
-	this.log.Info("exit .. ", local_conn.RemoteAddr().String())
+	this.log.Info("exit .. ", localConn.RemoteAddr().String())
 }
 
 func (this *FtpProxy) parseCommand(b []byte) (command *FtpCommand, err error) {
@@ -306,18 +306,18 @@ func (this *FtpProxy) parseResult(b []byte) (resp *FtpReturn, src []byte, err er
 }
 
 func (this *FtpProxy) dialToServer(pasv *FtpReturn) (conn net.Conn, err error) {
-	server_address := utils.JoinHostPort(pasv.Ip, pasv.Port)
-	conn, err = net.Dial("tcp", server_address)
+	serverAddress := utils.JoinHostPort(pasv.Ip, pasv.Port)
+	conn, err = net.Dial("tcp", serverAddress)
 	return
 }
 
-func (this *FtpProxy) listenPasvConnFromClient(resp *FtpReturn) (client_conn net.Conn, err error) {
+func (this *FtpProxy) listenPasvConnFromClient(resp *FtpReturn) (clientConn net.Conn, err error) {
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", resp.Port))
 	if err != nil {
 		this.log.Info("Pasv listen error ", err)
 		return
 	}
-	client_conn, err = ln.Accept()
+	clientConn, err = ln.Accept()
 	if err != nil {
 		this.log.Info("Accept client error : ", err)
 		//if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
@@ -331,9 +331,9 @@ func (this *FtpProxy) parseFtpRetrun(str string) (ret *FtpReturn, err error) {
 	if matches == nil {
 		return nil, errNotMatch
 	}
-	matched_count := len(matches)
+	matchedCount := len(matches)
 
-	uintBuff := make([]int, matched_count)
+	uintBuff := make([]int, matchedCount)
 	for i, e := range matches {
 		uintBuff[i], err = strconv.Atoi(e)
 		if err != nil {
@@ -341,17 +341,17 @@ func (this *FtpProxy) parseFtpRetrun(str string) (ret *FtpReturn, err error) {
 		}
 	}
 	ret = new(FtpReturn)
-	if matched_count >= 1 {
+	if matchedCount >= 1 {
 		// code
 		ret.Code = int(uintBuff[0])
 	}
-	if matched_count >= 2 {
-		if matched_count == 2 {
+	if matchedCount >= 2 {
+		if matchedCount == 2 {
 			// port
 			ret.Port = uint(uintBuff[1])
 			return
 		}
-		if matched_count >= 7 {
+		if matchedCount >= 7 {
 			// host
 			ip := net.IPv4(byte(uintBuff[1]), byte(uintBuff[2]), byte(uintBuff[3]), byte(uintBuff[4]))
 			ret.Ip = ip.String()
@@ -363,17 +363,17 @@ func (this *FtpProxy) parseFtpRetrun(str string) (ret *FtpReturn, err error) {
 }
 
 func (this *FtpProxy) Start() (err error) {
-	this.log.Info("Listen port", this.local_port)
+	this.log.Info("Listen port", this.localPort)
 
-	this.ln, err = net.Listen("tcp", utils.JoinHostPort("", this.local_port))
+	this.ln, err = net.Listen("tcp", utils.JoinHostPort("", this.localPort))
 	if err != nil {
-		this.log.Info("Can't Listen port: ", this.local_port, " ", err)
+		this.log.Info("Can't Listen port: ", this.localPort, " ", err)
 		return err
 	}
 	for !this.done {
 		conn, err := this.ln.Accept()
 		if err != nil {
-			this.log.Info("Can't Accept: ", this.local_port, " ", err)
+			this.log.Info("Can't Accept: ", this.localPort, " ", err)
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
 				continue
 			} else {
@@ -395,18 +395,18 @@ func (this *FtpProxy) Stop() error {
 }
 
 func (this *FtpProxy) LocalPort() uint {
-	return this.local_port
+	return this.localPort
 }
 
 func (this *FtpProxy) Traffic() (uint64, error) {
 	return 0, nil
 }
 
-func NewFtpProxy(local_port uint, remote_host string, remote_port uint) *FtpProxy {
+func NewFtpProxy(localPort uint, remoteHost string, remotePort uint) Proxyer {
 	return &FtpProxy{
-		local_port:  local_port,
-		remote_host: remote_host,
-		remote_port: remote_port,
-		log:         utils.NewLogger("FtpProxy"),
+		localPort:  localPort,
+		remoteHost: remoteHost,
+		remotePort: remotePort,
+		log:        utils.NewLogger("FtpProxy"),
 	}
 }

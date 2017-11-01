@@ -14,13 +14,13 @@ import (
 )
 
 type HttpReproxy struct {
-	local_port  uint
-	remote_host string
-	remote_port uint
-	from_name   string
-	log         *utils.Logger
+	localPort  uint
+	remoteHost string
+	remotePort uint
+	fromName   string
+	log        *utils.Logger
 
-	enable_black bool
+	enableBlack bool
 
 	proxyClient *fasthttp.HostClient
 }
@@ -36,13 +36,13 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 	//}
 
 	retry := 0
-	retry_count := 2
+	retryCount := 2
 	req := &ctx.Request
 	resp := &ctx.Response
 
 	this.prepareRequest(req, ctx)
 
-	for retry < retry_count {
+	for retry < retryCount {
 		if err := this.proxyClient.Do(req, resp); err != nil {
 			this.log.Info("error when proxying the request: %s", err)
 		}
@@ -59,7 +59,7 @@ func (this *HttpReproxy) reverseProxyHandler(ctx *fasthttp.RequestCtx) {
 }
 
 func (this *HttpReproxy) isBlack(addr net.Addr) bool {
-	if !this.enable_black {
+	if !this.enableBlack {
 		return false
 	}
 	ip, _, _ := net.SplitHostPort(addr.String())
@@ -78,21 +78,21 @@ func (this *HttpReproxy) prepareRequest(req *fasthttp.Request, ctx *fasthttp.Req
 	if len(req.Header.UserAgent()) <= 1 {
 		req.Header.Set("User-Agent", ReproxyUserAgent)
 	}
-	req.Header.Set("From", this.from_name)
+	req.Header.Set("From", this.fromName)
 	req.Header.Set("X-Forwarded-For", ctx.RemoteIP().String())
 }
 
 func (this *HttpReproxy) postprocessResponse(resp *fasthttp.Response) {
 	//resp.Header.Del("Connection")
 	resp.Header.Set("Server", ReproxyUserAgent)
-	resp.Header.Set("From", this.from_name)
+	resp.Header.Set("From", this.fromName)
 }
 
 func (this *HttpReproxy) Start() error {
-	this.log.Info("Listen port", this.local_port)
+	this.log.Info("Listen port", this.localPort)
 
 	this.proxyClient = &fasthttp.HostClient{
-		Addr:            utils.JoinHostPort(this.remote_host, this.remote_port),
+		Addr:            utils.JoinHostPort(this.remoteHost, this.remotePort),
 		MaxConns:        512,
 		MaxConnDuration: 60 * time.Second,
 		ReadTimeout:     60 * time.Second,
@@ -107,7 +107,7 @@ func (this *HttpReproxy) Start() error {
 		MaxConnsPerIP:        64,
 		Logger:               utils.NewLogger("HttpReverseProxy"),
 	}
-	err := s.ListenAndServe(utils.JoinHostPort("", this.local_port))
+	err := s.ListenAndServe(utils.JoinHostPort("", this.localPort))
 	if err != nil {
 		this.log.Info("ListenAndServe: ", err)
 		return err
@@ -124,15 +124,15 @@ func (this *HttpReproxy) Traffic() (uint64, error) {
 }
 
 func (this *HttpReproxy) LocalPort() uint {
-	return this.local_port
+	return this.localPort
 }
 
-func NewHttpReproxy(local_port uint, remote_host string, remote_port uint, from_name string) *HttpReproxy {
+func NewHttpReproxy(localPort uint, remoteHost string, remotePort uint, fromName string) Proxyer {
 	return &HttpReproxy{
-		local_port:  local_port,
-		remote_host: remote_host,
-		remote_port: remote_port,
-		from_name:   from_name,
-		log:         utils.NewLogger("HttpReverseProxy"),
+		localPort:  localPort,
+		remoteHost: remoteHost,
+		remotePort: remotePort,
+		fromName:   fromName,
+		log:        utils.NewLogger("HttpReverseProxy"),
 	}
 }

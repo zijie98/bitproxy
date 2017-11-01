@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/xtaci/kcp-go"
-	//"github.com/xtaci/smux"
 
+	"github.com/molisoft/bitproxy/proxy"
 	"github.com/molisoft/bitproxy/services"
 	"github.com/molisoft/bitproxy/utils"
 )
@@ -26,7 +26,7 @@ type SSServer struct {
 	crypt       string
 	pwd         string
 	port        uint
-	channel_net NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
+	channel_net proxy.NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
 	rate        uint
 	ln          net.Listener
 	log         *utils.Logger
@@ -122,7 +122,7 @@ func (this *SSServer) handle(client net.Conn) {
 
 func (this *SSServer) initListen() (err error) {
 	err = nil
-	if this.channel_net == KCP_PROTOCOL {
+	if this.channel_net == proxy.KCP_PROTOCOL {
 		this.ln, err = kcp.ListenWithOptions(this.addr(), nil, 10, 3)
 		if err != nil {
 			this.log.Info("kcp.DialWithOptions error", err)
@@ -133,10 +133,10 @@ func (this *SSServer) initListen() (err error) {
 			return err
 		}
 
-	} else if this.channel_net == TCP_PROTOCOL {
+	} else if this.channel_net == proxy.TCP_PROTOCOL {
 		this.ln, err = net.Listen("tcp", this.addr())
 
-	} else if this.channel_net == UDP_PROTOCOL {
+	} else if this.channel_net == proxy.UDP_PROTOCOL {
 		this.ln, err = net.Listen("udp", this.addr())
 	} else {
 		return errors.New("Not fount net type")
@@ -145,7 +145,7 @@ func (this *SSServer) initListen() (err error) {
 }
 
 func (this *SSServer) AcceptClient() (net.Conn, error) {
-	if this.channel_net == KCP_PROTOCOL {
+	if this.channel_net == proxy.KCP_PROTOCOL {
 		conn, err := this.ln.(*kcp.Listener).AcceptKCP()
 		if err != nil {
 			this.log.Info("Get kcp conn err: ", err)
@@ -160,10 +160,10 @@ func (this *SSServer) AcceptClient() (net.Conn, error) {
 		this.log.Info("Accept address:", conn.RemoteAddr())
 		return conn, nil
 
-	} else if this.channel_net == TCP_PROTOCOL {
+	} else if this.channel_net == proxy.TCP_PROTOCOL {
 		return this.ln.Accept()
 
-	} else if this.channel_net == UDP_PROTOCOL {
+	} else if this.channel_net == proxy.UDP_PROTOCOL {
 		return this.ln.Accept()
 	}
 	return nil, errors.New("Not found conn")
@@ -225,7 +225,7 @@ func (this *SSServer) LocalPort() uint {
 	return this.port
 }
 
-func NewServer(channel_net NetProtocol, port uint, pwd, crypt string, rate uint) *SSServer {
+func NewServer(channel_net proxy.NetProtocol, port uint, pwd, crypt string, rate uint) proxy.Proxyer {
 	return &SSServer{
 		crypt:       crypt,
 		pwd:         pwd,

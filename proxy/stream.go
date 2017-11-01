@@ -7,7 +7,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/molisoft/bitproxy/proxy/ss"
 	"github.com/molisoft/bitproxy/services"
 	"github.com/molisoft/bitproxy/utils"
 )
@@ -15,25 +14,25 @@ import (
 const READ_TIMEOUT = 60
 
 type StreamProxy struct {
-	local_port     uint
-	local_net      ss.NetProtocol
-	remote_host    string
-	remote_port    uint
-	rate           uint
-	enable_traffic bool
-	enable_black   bool
+	localPort     uint
+	localNet      NetProtocol
+	remoteHost    string
+	remotePort    uint
+	rate          uint
+	enableTraffic bool
+	enableBlack   bool
 
 	ln  net.Listener
 	log *utils.Logger
 }
 
 func (this *StreamProxy) Start() (err error) {
-	this.ln, err = net.Listen(string(this.local_net), utils.JoinHostPort("", this.local_port))
+	this.ln, err = net.Listen(string(this.localNet), utils.JoinHostPort("", this.localPort))
 	if err != nil {
-		this.log.Info("Can't Listen port: ", this.local_port, " ", err)
+		this.log.Info("Can't Listen port: ", this.localPort, " ", err)
 		return err
 	}
-	this.log.Info("Listen port", this.local_port)
+	this.log.Info("Listen port", this.localPort)
 	for {
 		conn, err := this.ln.Accept()
 		if err != nil {
@@ -51,7 +50,7 @@ func (this *StreamProxy) Start() (err error) {
 }
 
 func (this *StreamProxy) isBlack(addr net.Addr) bool {
-	if !this.enable_black {
+	if !this.enableBlack {
 		return false
 	}
 	ip, _, _ := net.SplitHostPort(addr.String())
@@ -74,40 +73,40 @@ func (this *StreamProxy) Stop() error {
 }
 
 func (this *StreamProxy) LocalPort() uint {
-	return this.local_port
+	return this.localPort
 }
 
 func (this *StreamProxy) Traffic() (uint64, error) {
-	return services.GetTraffic(this.local_port)
+	return services.GetTraffic(this.localPort)
 }
 
-func (this *StreamProxy) handle(local_conn net.Conn) {
+func (this *StreamProxy) handle(localConn net.Conn) {
 	var done = make(chan bool, 2)
 
 	defer func() {
-		err := local_conn.Close()
+		err := localConn.Close()
 		if err != nil {
 			this.log.Info("local_conn close error ", err.Error())
 		}
 	}()
 
-	remote_conn, err := net.Dial(
-		string(this.local_net),
-		utils.JoinHostPort(this.remote_host, this.remote_port),
+	remoteConn, err := net.Dial(
+		string(this.localNet),
+		utils.JoinHostPort(this.remoteHost, this.remotePort),
 	)
 	if err != nil {
 		this.log.Info("Dial remote host error: ", err)
 		return
 	}
 	defer func() {
-		err := remote_conn.Close()
+		err := remoteConn.Close()
 		if err != nil {
 			this.log.Info("Remote close error ", err.Error())
 		}
 	}()
 
 	// 读取到数据后通知、相当于超时机制
-	var read_notify = make(utils.ReadNotify, 5)
+	var readNotify = make(utils.ReadNotify, 5)
 	go func() {
 		for {
 			select {
@@ -115,32 +114,32 @@ func (this *StreamProxy) handle(local_conn net.Conn) {
 				this.log.Info("Timeout")
 				done <- true
 				return
-			case <-read_notify:
+			case <-readNotify:
 				break
 			}
 		}
 	}()
 	readAfterFunc := func(n int64, e error) {
-		read_notify <- n
+		readNotify <- n
 	}
 
-	var copy_data = func(dsc net.Conn, src net.Conn, limit *utils.Limit) {
+	var copyData = func(dsc net.Conn, src net.Conn, limit *utils.Limit) {
 		_, err := utils.Copy(dsc, src, limit, nil, nil, readAfterFunc, nil, this.trafficStats, 0)
 		if err != nil {
 			done <- true
 		}
 	}
-	go copy_data(remote_conn, local_conn, nil)
-	go copy_data(local_conn, remote_conn, this.Limit())
+	go copyData(remoteConn, localConn, nil)
+	go copyData(localConn, remoteConn, this.Limit())
 	<-done
 }
 
 // 流量统计
 func (this *StreamProxy) trafficStats(n int64, e error) {
-	if this.enable_traffic == false {
+	if this.enableTraffic == false {
 		return
 	}
-	services.AddTrafficStats(this.local_port, n)
+	services.AddTrafficStats(this.localPort, n)
 }
 
 // 流量限制
@@ -150,13 +149,13 @@ func (this *StreamProxy) Limit() *utils.Limit {
 	}
 }
 
-func NewStreamProxy(local_net ss.NetProtocol, local_port uint, remote_host string, remote_port uint, rate uint) *StreamProxy {
+func NewStreamProxy(localNet NetProtocol, localPort uint, remoteHost string, remotePort uint, rate uint) Proxyer {
 	return &StreamProxy{
-		local_net:   local_net,
-		local_port:  local_port,
-		remote_host: remote_host,
-		remote_port: remote_port,
-		rate:        rate,
-		log:         utils.NewLogger("StreamProxy"),
+		localNet:   localNet,
+		localPort:  localPort,
+		remoteHost: remoteHost,
+		remotePort: remotePort,
+		rate:       rate,
+		log:        utils.NewLogger("StreamProxy"),
 	}
 }

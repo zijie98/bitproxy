@@ -16,19 +16,20 @@ import (
 	"time"
 
 	"github.com/kataras/go-errors"
+	"github.com/molisoft/bitproxy/proxy"
 	"github.com/molisoft/bitproxy/utils"
 	"github.com/xtaci/kcp-go"
 )
 
 type SSClient struct {
-	crypt       string
-	pwd         string
-	local_port  uint
-	local_net   NetProtocol // tcp/udp， 浏览器 -> ss客户端 之间的通信方式
-	channel_net NetProtocol // tcp/udp/kcp， ss客户端 -> ss服务器 之间的通信方式
-	server_addr string      // 8.8.8.8:1990
-	ln          net.Listener
-	log         *utils.Logger
+	crypt      string
+	pwd        string
+	localPort  uint
+	localNet   proxy.NetProtocol // tcp/udp， 浏览器 -> ss客户端 之间的通信方式
+	channelNet proxy.NetProtocol // tcp/udp/kcp， ss客户端 -> ss服务器 之间的通信方式
+	serverAddr string            // 8.8.8.8:1990
+	ln         net.Listener
+	log        *utils.Logger
 }
 
 func (this *SSClient) handle(client io.ReadWriteCloser) {
@@ -53,9 +54,9 @@ func (this *SSClient) handle(client io.ReadWriteCloser) {
 		return
 	}
 
-	raw_addr, err := this.getRequestRemoteAddr(client)
+	rawAddr, err := this.getRequestRemoteAddr(client)
 	if err != nil {
-		this.log.Info("RemoteAddrHandle err ", err, raw_addr)
+		this.log.Info("RemoteAddrHandle err ", err, rawAddr)
 		return
 	}
 
@@ -67,13 +68,13 @@ func (this *SSClient) handle(client io.ReadWriteCloser) {
 	}
 
 	// connect to server
-	server_conn, err := this.getServerConn()
+	serverConn, err := this.getServerConn()
 	if err != nil {
 		this.log.Info("Connect to server fail ", err)
 		return
 	}
 
-	server, err := NewCryptConn(server_conn, this.pwd, this.crypt)
+	server, err := NewCryptConn(serverConn, this.pwd, this.crypt)
 	if err != nil {
 		this.log.Info("NewCryptConn err ", err)
 		return
@@ -81,7 +82,7 @@ func (this *SSClient) handle(client io.ReadWriteCloser) {
 	defer server.Close()
 
 	// ss协议中，将把浏览器的请求发给服务器
-	server.Write(raw_addr)
+	server.Write(rawAddr)
 
 	go utils.CopyWithTimeout(server, client, nil, 600*time.Second)
 	utils.CopyWithTimeout(client, server, nil, 600*time.Second)
@@ -90,14 +91,14 @@ func (this *SSClient) handle(client io.ReadWriteCloser) {
 }
 
 func (this *SSClient) getServerConn() (net.Conn, error) {
-	if this.channel_net == UDP_PROTOCOL {
-		return net.Dial("udp", this.server_addr)
+	if this.channelNet == proxy.UDP_PROTOCOL {
+		return net.Dial("udp", this.serverAddr)
 
-	} else if this.channel_net == TCP_PROTOCOL {
-		return net.Dial("tcp", this.server_addr)
+	} else if this.channelNet == proxy.TCP_PROTOCOL {
+		return net.Dial("tcp", this.serverAddr)
 
-	} else if this.channel_net == KCP_PROTOCOL {
-		conn, err := kcp.DialWithOptions(this.server_addr, nil, 10, 3)
+	} else if this.channelNet == proxy.KCP_PROTOCOL {
+		conn, err := kcp.DialWithOptions(this.serverAddr, nil, 10, 3)
 		if err != nil {
 			this.log.Info("SSCLIENT: kcp.DialWithOptions error", err)
 			return nil, errors.New("SSCLIENT: kcp.DialWithOptions error " + err.Error())
@@ -109,7 +110,7 @@ func (this *SSClient) getServerConn() (net.Conn, error) {
 		conn.SetACKNoDelay(true)
 		return conn, nil
 	} else {
-		return nil, errors.New("Not found protocol: " + string(this.channel_net) + "?")
+		return nil, errors.New("Not found protocol: " + string(this.channelNet) + "?")
 	}
 }
 
@@ -147,11 +148,11 @@ func (this *SSClient) getRequestRemoteAddr(client io.ReadWriter) (addr []byte, e
 }
 
 func (this *SSClient) initListen() error {
-	if this.local_net == KCP_PROTOCOL {
+	if this.localNet == proxy.KCP_PROTOCOL {
 		return errors.New("浏览器（或其他软件）连接到本客户端是不支持kcp协议的")
 	}
 	var err error
-	this.ln, err = net.Listen(string(this.local_net), fmt.Sprintf(":%d", this.local_port))
+	this.ln, err = net.Listen(string(this.localNet), fmt.Sprintf(":%d", this.localPort))
 	if err != nil {
 		this.log.Info("Listen err ", err)
 	}
@@ -161,7 +162,7 @@ func (this *SSClient) initListen() error {
 func (this *SSClient) Start() error {
 	this.initListen()
 
-	this.log.Info("Listen port", this.local_port)
+	this.log.Info("Listen port", this.localPort)
 	for {
 		conn, err := this.ln.Accept()
 		if err != nil {
@@ -186,17 +187,17 @@ func (this *SSClient) Traffic() (uint64, error) {
 }
 
 func (this *SSClient) LocalPort() uint {
-	return this.local_port
+	return this.localPort
 }
 
-func NewClient(local_net NetProtocol, local_port uint, server_addr string, channel_net NetProtocol, pwd, crypt string) *SSClient {
+func NewClient(localNet proxy.NetProtocol, localPort uint, serverAddr string, channelNet proxy.NetProtocol, pwd, crypt string) proxy.Proxyer {
 	return &SSClient{
-		crypt:       crypt,
-		pwd:         pwd,
-		local_net:   local_net,
-		local_port:  local_port,
-		channel_net: channel_net,
-		server_addr: server_addr,
-		log:         utils.NewLogger("SSClient"),
+		crypt:      crypt,
+		pwd:        pwd,
+		localNet:   localNet,
+		localPort:  localPort,
+		channelNet: channelNet,
+		serverAddr: serverAddr,
+		log:        utils.NewLogger("SSClient"),
 	}
 }

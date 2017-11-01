@@ -17,8 +17,8 @@ type CryptConn struct {
 }
 
 // crypt_name 加密类型（"chacha20"等）
-func NewCryptConn(conn net.Conn, password, crypt_name string) (crypt_conn *CryptConn, err error) {
-	cipher := CipherMethod[crypt_name]
+func NewCryptConn(conn net.Conn, password, cryptName string) (cryptConn *CryptConn, err error) {
+	cipher := CipherMethod[cryptName]
 	key := EvpBytesToKey(password, cipher.keyLen)
 
 	// 从内存池申请ivLen大小的内存
@@ -30,31 +30,31 @@ func NewCryptConn(conn net.Conn, password, crypt_name string) (crypt_conn *Crypt
 		return
 	}
 
-	cipher_info := &cipherInfo{
+	cipherInfo := &cipherInfo{
 		keyLen:    cipher.keyLen,
 		ivLen:     cipher.ivLen,
 		newStream: cipher.newStream,
 	}
-	crypt_conn = &CryptConn{
+	cryptConn = &CryptConn{
 		Conn:   conn,
-		cipher: cipher_info,
+		cipher: cipherInfo,
 		key:    key,
 		iv:     iv,
 	}
-	return crypt_conn, err
+	return cryptConn, err
 }
 
 // 加密并且写入 conn
 func (this *CryptConn) Write(p []byte) (n int, err error) {
-	send_iv := false
+	sendIv := false
 	if this.enc == nil {
 		this.enc, err = this.cipher.newStream(this.key, this.iv, Encrypt)
-		send_iv = true
+		sendIv = true
 		if err != nil {
 			return 0, err
 		}
 	}
-	if send_iv {
+	if sendIv {
 		this.Conn.Write(this.iv)
 	}
 	this.enc.XORKeyStream(p, p)

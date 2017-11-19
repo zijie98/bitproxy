@@ -95,6 +95,8 @@ func (this *Manager) DeleteByPort(port uint) {
 		this.Config.SsClient = nil
 		return
 	}
+
+	this.SaveToConfig()
 }
 
 //	将配置文件格式化到配置

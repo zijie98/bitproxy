@@ -121,7 +121,6 @@ func (this *SSServer) handle(client net.Conn) {
 }
 
 func (this *SSServer) initListen() (err error) {
-	err = nil
 	if this.channel_net == proxy.KCP_PROTOCOL {
 		this.ln, err = kcp.ListenWithOptions(this.addr(), nil, 10, 3)
 		if err != nil {
@@ -135,11 +134,10 @@ func (this *SSServer) initListen() (err error) {
 
 	} else if this.channel_net == proxy.TCP_PROTOCOL {
 		this.ln, err = net.Listen("tcp", this.addr())
-
 	} else if this.channel_net == proxy.UDP_PROTOCOL {
 		this.ln, err = net.Listen("udp", this.addr())
 	} else {
-		return errors.New("Not fount net type")
+		return errors.New("Not found net type")
 	}
 	return
 }
@@ -206,12 +204,12 @@ func (this *SSServer) Start() error {
 }
 
 func (this *SSServer) Stop() (err error) {
-	if this.ln == nil {
-		return nil
-	}
 	this.done = true
 	if this.ln != nil {
 		err = this.ln.Close()
+		if err != nil {
+			this.log.Info("Listener stop err ", err)
+		}
 		this.ln = nil
 	}
 	return

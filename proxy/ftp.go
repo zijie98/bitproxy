@@ -373,8 +373,9 @@ func (this *FtpProxy) Start() (err error) {
 	for !this.done {
 		conn, err := this.ln.Accept()
 		if err != nil {
-			this.log.Info("Can't Accept: ", this.localPort, " ", err)
+			// this.log.Info("Can't Accept: ", this.localPort, " ", err)
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+				time.Sleep(100 * time.Millisecond)
 				continue
 			} else {
 				return err

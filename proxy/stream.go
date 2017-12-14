@@ -22,8 +22,9 @@ type StreamProxy struct {
 	enableTraffic bool
 	enableBlack   bool
 
-	ln  net.Listener
-	log *utils.Logger
+	ln   net.Listener
+	log  *utils.Logger
+	done bool
 }
 
 func (this *StreamProxy) Start() (err error) {
@@ -33,7 +34,7 @@ func (this *StreamProxy) Start() (err error) {
 		return err
 	}
 	this.log.Info("Listen port", this.localPort)
-	for {
+	for !this.done {
 		conn, err := this.ln.Accept()
 		if err != nil {
 			this.log.Info("Can't Accept: ", err)
@@ -66,6 +67,7 @@ func (this *StreamProxy) isBlack(addr net.Addr) bool {
 }
 
 func (this *StreamProxy) Stop() error {
+	this.done = true
 	if this.ln == nil {
 		return nil
 	}
@@ -108,7 +110,7 @@ func (this *StreamProxy) handle(localConn net.Conn) {
 	// 读取到数据后通知、相当于超时机制
 	var readNotify = make(utils.ReadNotify, 5)
 	go func() {
-		for {
+		for !this.done {
 			select {
 			case <-time.After(READ_TIMEOUT * time.Second):
 				this.log.Info("Timeout")

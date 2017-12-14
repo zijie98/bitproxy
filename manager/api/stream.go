@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/kataras/go-errors"
 	"github.com/molisoft/bitproxy/manager"
@@ -15,12 +16,19 @@ func CreateStream(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "bind json error " + err.Error()})
 		return
 	}
-	err = manager.Man.CreateProxy(&config, false).Start()
-	if err != nil {
+	proxy := manager.Man.CreateProxy(&config, true)
+	e := make(chan error)
+	go func() {
+		e <- proxy.Start()
+	}()
+	select {
+	case err = <-e:
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "create stream error " + err.Error()})
 		return
+	case <-time.After(2 * time.Second):
+		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
+		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
 func ActionStream(ctx *gin.Context) {
@@ -60,16 +68,25 @@ func ActionStream(ctx *gin.Context) {
 
 func stopStream(config *manager.StreamProxyConfig) error {
 	proxy := manager.Man.FindProxyByPort(config.LocalPort)
+	if proxy == nil {
+		return errors.New("not found")
+	}
 	return proxy.Stop()
 }
 
 func startStream(config *manager.StreamProxyConfig) error {
 	proxy := manager.Man.FindProxyByPort(config.LocalPort)
+	if proxy == nil {
+		return errors.New("not found")
+	}
 	return proxy.Start()
 }
 
 func trafficStream(config *manager.StreamProxyConfig) (uint64, error) {
 	proxy := manager.Man.FindProxyByPort(config.LocalPort)
+	if proxy == nil {
+		return 0, errors.New("not found")
+	}
 	return proxy.GetTraffic()
 }
 

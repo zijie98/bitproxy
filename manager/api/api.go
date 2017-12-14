@@ -40,7 +40,7 @@ func initEngine() *gin.Engine {
 }
 
 func afterFunc(ctx *gin.Context) {
-	//manager.Man.SaveToConfig()
+	manager.Man.SaveToConfig()
 }
 
 func Start(pwd string, port uint) error {

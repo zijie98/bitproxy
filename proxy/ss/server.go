@@ -31,6 +31,7 @@ type SSServer struct {
 	ln          net.Listener
 	log         *utils.Logger
 	done        bool
+	clients     *ClientLimit
 }
 
 func (this *SSServer) getRequest(client io.Reader) (host string, extra []byte, err error) {
@@ -118,6 +119,8 @@ func (this *SSServer) handle(client net.Conn) {
 	}
 	go utils.Copy(remote, client, limit, nil, nil, nil, nil, trafficStats, 600*time.Second)
 	utils.Copy(client, remote, nil, nil, nil, nil, nil, nil, 600*time.Second)
+
+	this.clients.Close(client)
 }
 
 func (this *SSServer) initListen() (err error) {
@@ -183,7 +186,7 @@ func (this *SSServer) Start() error {
 		conn, err := this.AcceptClient()
 		if err != nil {
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
-				this.log.Info("Temporary error when accepting new connections: ", netErr)
+				// this.log.Info("Temporary error when accepting new connections: ", netErr)
 				time.Sleep(time.Second)
 				continue
 			}
@@ -197,6 +200,7 @@ func (this *SSServer) Start() error {
 			}
 		} else {
 			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr())
+			this.clients.Add(conn)
 			go this.handle(conn)
 		}
 	}
@@ -231,5 +235,6 @@ func NewServer(channel_net proxy.NetProtocol, port uint, pwd, crypt string, rate
 		channel_net: channel_net,
 		rate:        rate,
 		log:         utils.NewLogger("SSServer"),
+		clients:     NewClientLimit(3),
 	}
 }

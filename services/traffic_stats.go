@@ -10,14 +10,21 @@ type Stats struct {
 	Traffic int64
 }
 
+var stats = false // 是否启动统计
 var trafficStats = make(chan *Stats, 512)
 var deleteTrafficStats = make(chan *Stats, 128)
 
 func AddTrafficStats(port uint, traffic int64) {
+	if !stats {
+		return
+	}
 	trafficStats <- &Stats{Port: port, Traffic: traffic}
 }
 
 func DeleteTrafficStats(port uint) {
+	if !stats {
+		return
+	}
 	deleteTrafficStats <- &Stats{Port: port}
 }
 
@@ -27,7 +34,7 @@ func GetTraffic(port uint) (uint64, error) {
 
 // 开始统计
 func StartStats() {
-
+	stats = true
 	// 累加流量
 	go func() {
 		for {

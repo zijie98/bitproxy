@@ -66,7 +66,7 @@ func (this *ClientLimit) release() bool {
 	return true
 }
 
-func (this *ClientLimit) Close(client net.Conn) {
+func (this *ClientLimit) RemoveConn(client net.Conn) {
 	c := this.findByIp(getIp(client))
 	if c != nil {
 		delete(c.conns, client)

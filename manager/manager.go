@@ -59,22 +59,6 @@ func (this *Manager) DeleteByPort(port uint) {
 	h.Stop()
 	delete(this.handles, port)
 
-	if this.Config.HttpReproxy != nil {
-		for i, cfg := range this.Config.HttpReproxy {
-			if cfg.LocalPort == port {
-				this.Config.HttpReproxy = append(this.Config.HttpReproxy[:i], this.Config.HttpReproxy[i+1:]...)
-				return
-			}
-		}
-	}
-	if this.Config.FtpProxy != nil {
-		for i, cfg := range this.Config.FtpProxy {
-			if cfg.LocalPort == port {
-				this.Config.FtpProxy = append(this.Config.FtpProxy[:i], this.Config.FtpProxy[i+1:]...)
-				return
-			}
-		}
-	}
 	if this.Config.SsServer != nil {
 		for i, cfg := range this.Config.SsServer {
 			if cfg.Port == port {
@@ -87,6 +71,22 @@ func (this *Manager) DeleteByPort(port uint) {
 		for i, cfg := range this.Config.Stream {
 			if cfg.LocalPort == port {
 				this.Config.Stream = append(this.Config.Stream[:i], this.Config.Stream[i+1:]...)
+				return
+			}
+		}
+	}
+	if this.Config.HttpReproxy != nil {
+		for i, cfg := range this.Config.HttpReproxy {
+			if cfg.LocalPort == port {
+				this.Config.HttpReproxy = append(this.Config.HttpReproxy[:i], this.Config.HttpReproxy[i+1:]...)
+				return
+			}
+		}
+	}
+	if this.Config.FtpProxy != nil {
+		for i, cfg := range this.Config.FtpProxy {
+			if cfg.LocalPort == port {
+				this.Config.FtpProxy = append(this.Config.FtpProxy[:i], this.Config.FtpProxy[i+1:]...)
 				return
 			}
 		}

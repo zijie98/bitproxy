@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -61,7 +62,7 @@ func ActionSsServer(ctx *gin.Context) {
 		err = errors.New("not found action")
 	}
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 	}
@@ -101,6 +102,10 @@ func trafficSs(config *manager.SsServerConfig) (uint64, error) {
 }
 
 func removeSs(config *manager.SsServerConfig) error {
+	proxy := manager.Man.FindProxyByPort(config.Port)
+	if proxy == nil {
+		return errors.New("无法找到该ss代理")
+	}
 	manager.Man.DeleteByPort(config.Port)
 	return nil
 }

@@ -152,13 +152,14 @@ func (this *StreamProxy) Limit() *utils.Limit {
 	}
 }
 
-func NewStreamProxy(localNet NetProtocol, localPort uint, remoteHost string, remotePort uint, rate uint) Proxyer {
+func NewStreamProxy(localNet NetProtocol, localPort uint, remoteHost string, remotePort uint, rate uint, enableTraffic bool) Proxyer {
 	return &StreamProxy{
-		localNet:   localNet,
-		localPort:  localPort,
-		remoteHost: remoteHost,
-		remotePort: remotePort,
-		rate:       rate,
-		log:        utils.NewLogger("StreamProxy"),
+		localNet:      localNet,
+		localPort:     localPort,
+		remoteHost:    remoteHost,
+		remotePort:    remotePort,
+		enableTraffic: enableTraffic,
+		rate:          rate,
+		log:           utils.NewLogger("StreamProxy"),
 	}
 }

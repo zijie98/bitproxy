@@ -27,12 +27,13 @@ type HttpReproxyConfig struct {
 
 // TCP/UDP 代理配置
 type StreamProxyConfig struct {
-	LocalNet    string `json:"local_net"`
-	LocalPort   uint   `json:"local_port"`
-	ServerHost  string `json:"server_host"`
-	ServerPort  uint   `json:"server_port"`
-	Rate        uint   `json:"rate"`
-	EnableBlack bool   `json:"enable_black"`
+	LocalNet      string `json:"local_net"`
+	LocalPort     uint   `json:"local_port"`
+	ServerHost    string `json:"server_host"`
+	ServerPort    uint   `json:"server_port"`
+	Rate          uint   `json:"rate"`
+	EnableBlack   bool   `json:"enable_black"`
+	EnableTraffic bool   `json:"enable_traffic"`
 }
 
 // Shadowsocks 客户端配置

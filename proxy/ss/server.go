@@ -15,23 +15,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xtaci/kcp-go"
-
 	"github.com/molisoft/bitproxy/proxy"
 	"github.com/molisoft/bitproxy/services"
 	"github.com/molisoft/bitproxy/utils"
+	"github.com/xtaci/kcp-go"
 )
 
 type SSServer struct {
-	crypt       string
-	pwd         string
-	port        uint
-	channel_net proxy.NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
-	rate        uint
-	ln          net.Listener
-	log         *utils.Logger
-	done        bool
-	clients     *ClientLimit
+	crypt         string
+	pwd           string
+	port          uint
+	channelNet    proxy.NetProtocol //客户端与服务器端的通信协议 tcp/udp/kcp
+	rate          uint
+	ln            net.Listener
+	log           *utils.Logger
+	done          bool
+	clients       *ClientLimit
+	enableTraffic bool // 是否开启流量统计
 }
 
 func (this *SSServer) getRequest(client io.Reader) (host string, extra []byte, err error) {
@@ -113,6 +113,9 @@ func (this *SSServer) handle(client net.Conn) {
 	}
 	limit := &utils.Limit{Rate: this.rate}
 	var trafficStats = func(n int64, e error) {
+		if !this.enableTraffic {
+			return
+		}
 		if e == nil {
 			services.AddTrafficStats(this.port, n)
 		}
@@ -124,7 +127,7 @@ func (this *SSServer) handle(client net.Conn) {
 }
 
 func (this *SSServer) initListen() (err error) {
-	if this.channel_net == proxy.KCP_PROTOCOL {
+	if this.channelNet == proxy.KCP_PROTOCOL {
 		this.ln, err = kcp.ListenWithOptions(this.addr(), nil, 10, 3)
 		if err != nil {
 			this.log.Info("kcp.DialWithOptions error", err)
@@ -135,9 +138,9 @@ func (this *SSServer) initListen() (err error) {
 			return err
 		}
 
-	} else if this.channel_net == proxy.TCP_PROTOCOL {
+	} else if this.channelNet == proxy.TCP_PROTOCOL {
 		this.ln, err = net.Listen("tcp", this.addr())
-	} else if this.channel_net == proxy.UDP_PROTOCOL {
+	} else if this.channelNet == proxy.UDP_PROTOCOL {
 		this.ln, err = net.Listen("udp", this.addr())
 	} else {
 		return errors.New("Not found net type")
@@ -146,7 +149,7 @@ func (this *SSServer) initListen() (err error) {
 }
 
 func (this *SSServer) AcceptClient() (net.Conn, error) {
-	if this.channel_net == proxy.KCP_PROTOCOL {
+	if this.channelNet == proxy.KCP_PROTOCOL {
 		conn, err := this.ln.(*kcp.Listener).AcceptKCP()
 		if err != nil {
 			this.log.Info("Get kcp conn err: ", err)
@@ -161,10 +164,10 @@ func (this *SSServer) AcceptClient() (net.Conn, error) {
 		this.log.Info("Accept address:", conn.RemoteAddr())
 		return conn, nil
 
-	} else if this.channel_net == proxy.TCP_PROTOCOL {
+	} else if this.channelNet == proxy.TCP_PROTOCOL {
 		return this.ln.Accept()
 
-	} else if this.channel_net == proxy.UDP_PROTOCOL {
+	} else if this.channelNet == proxy.UDP_PROTOCOL {
 		return this.ln.Accept()
 	}
 	return nil, errors.New("Not found conn")
@@ -227,14 +230,15 @@ func (this *SSServer) LocalPort() uint {
 	return this.port
 }
 
-func NewServer(channel_net proxy.NetProtocol, port uint, pwd, crypt string, rate uint) proxy.Proxyer {
+func NewServer(channelNet proxy.NetProtocol, port uint, pwd, crypt string, rate uint, enableTraffic bool) proxy.Proxyer {
 	return &SSServer{
-		crypt:       crypt,
-		pwd:         pwd,
-		port:        port,
-		channel_net: channel_net,
-		rate:        rate,
-		log:         utils.NewLogger("SSServer"),
-		clients:     NewClientLimit(3),
+		crypt:         crypt,
+		pwd:           pwd,
+		port:          port,
+		channelNet:    channelNet,
+		rate:          rate,
+		enableTraffic: enableTraffic,
+		log:           utils.NewLogger("SSServer"),
+		clients:       NewClientLimit(3),
 	}
 }

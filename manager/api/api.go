@@ -44,11 +44,11 @@ func afterFunc(ctx *gin.Context) {
 }
 
 func Start(pwd string, port uint) error {
-	fmt.Println("Start Api service.. port", port)
+	fmt.Println("Start Api service.. port ", port)
 	password = pwd
 
-	gin.DefaultWriter = utils.NewLogger("api.log")
-	gin.DefaultErrorWriter = utils.NewLogger("api.error.log")
+	gin.DefaultWriter = utils.NewLogger("api")
+	gin.DefaultErrorWriter = utils.NewLogger("api.error")
 
 	server := initEngine()
 	return server.Run(utils.JoinHostPort("", port))

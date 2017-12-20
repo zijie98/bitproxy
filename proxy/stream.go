@@ -142,7 +142,9 @@ func (this *StreamProxy) trafficStats(n int64, e error) {
 	if this.enableTraffic == false {
 		return
 	}
-	services.AddTrafficStats(this.localPort, n)
+	if n > 0 {
+		services.AddTrafficStats(this.localPort, n)
+	}
 }
 
 // 流量限制

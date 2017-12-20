@@ -17,7 +17,7 @@ type Client struct {
 }
 
 type ClientLimit struct {
-	clients    *list.List
+	clients    *list.List // list适合做堆栈
 	limitCount int
 }
 
@@ -78,17 +78,15 @@ func (this *ClientLimit) isExceed() bool {
 }
 
 func (this *ClientLimit) Add(client net.Conn) {
-	// ip如果已存在则跳过，但是添加连接
+	// ip如果已存在则记录链接，同时跳过
 	ip := getIp(client)
-	if this.isExist(ip) {
-		c := this.findByIp(ip)
-		if c != nil {
-			c.conns[client] = 0
-		}
+	c := this.findByIp(ip)
+	if c != nil {
+		c.conns[client] = 0
 		return
 	}
 	// 新ip添加到列表
-	c := &Client{
+	c = &Client{
 		ip:    ip,
 		at:    time.Now(),
 		conns: make(map[net.Conn]int8, 10),

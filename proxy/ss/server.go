@@ -121,7 +121,7 @@ func (this *SSServer) handle(client net.Conn) {
 		}
 	}
 	go utils.Copy(remote, client, limit, nil, nil, nil, nil, trafficStats, 600*time.Second)
-	utils.Copy(client, remote, nil, nil, nil, nil, nil, nil, 600*time.Second)
+	utils.Copy(client, remote, nil, nil, nil, nil, nil, trafficStats, 600*time.Second)
 
 	this.clients.RemoveConn(client)
 }

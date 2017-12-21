@@ -16,6 +16,7 @@ func CreateStream(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "bind json error " + err.Error()})
 		return
 	}
+	removeStream(&config)
 	proxy := manager.Man.CreateProxy(&config, true)
 	e := make(chan error)
 	go func() {
@@ -54,8 +55,6 @@ func ActionStream(ctx *gin.Context) {
 		return
 	case "remove":
 		err = removeStream(&config)
-	case "modify":
-		err = modifyStream(&config)
 	default:
 		err = errors.New("not found action")
 	}
@@ -91,18 +90,10 @@ func trafficStream(config *manager.StreamProxyConfig) (uint64, error) {
 }
 
 func removeStream(config *manager.StreamProxyConfig) error {
-	err := stopStream(config)
-	if err != nil {
-		return err
+	proxy := manager.Man.FindProxyByPort(config.LocalPort)
+	if proxy == nil {
+		return errors.New("not found")
 	}
 	manager.Man.DeleteByPort(config.LocalPort)
 	return nil
-}
-
-func modifyStream(config *manager.StreamProxyConfig) error {
-	err := removeStream(config)
-	if err != nil {
-		return err
-	}
-	return manager.Man.CreateProxy(config, true).Start()
 }

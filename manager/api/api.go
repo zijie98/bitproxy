@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/molisoft/bitproxy/manager"
 	"github.com/molisoft/bitproxy/utils"
 	"gopkg.in/gin-gonic/gin.v1"
 )

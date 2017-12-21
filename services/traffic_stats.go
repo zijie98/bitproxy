@@ -2,7 +2,8 @@ package services
 
 import (
 	"fmt"
-	"strconv"
+
+	"github.com/garyburd/redigo/redis"
 )
 
 type Stats struct {
@@ -28,7 +29,7 @@ func DeleteTrafficStats(port uint) {
 	deleteTrafficStats <- &Stats{Port: port}
 }
 
-func GetTraffic(port uint) (uint64, error) {
+func GetTraffic(port uint) (int64, error) {
 	return getTraffic(port)
 }
 
@@ -75,7 +76,7 @@ func persistent() {
 	conn.Send("SAVE")
 }
 
-func getTraffic(port uint) (uint64, error) {
+func getTraffic(port uint) (int64, error) {
 	conn, err := getRedisConn()
 	if err != nil {
 		return 0, err
@@ -85,7 +86,7 @@ func getTraffic(port uint) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return strconv.ParseUint(reply.(string), 10, 64)
+	return redis.Int64(reply, err)
 }
 
 func statsToRedis(s *Stats) error {
@@ -94,7 +95,11 @@ func statsToRedis(s *Stats) error {
 		return err
 	}
 	key := statsKey(s.Port)
-	return conn.Send("INCRBY", key, s.Traffic)
+	_, err = conn.Do("INCRBY", key, s.Traffic)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func deleteFromTheRedis(s *Stats) error {
@@ -103,7 +108,11 @@ func deleteFromTheRedis(s *Stats) error {
 		return err
 	}
 	key := statsKey(s.Port)
-	return conn.Send("DEL", key)
+	_, err = conn.Do("DEL", key)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func statsKey(port uint) string {

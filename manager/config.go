@@ -79,9 +79,8 @@ type ProxyConfig struct {
 	Stream      []StreamProxyConfig `json:"stream"`
 	HttpReproxy []HttpReproxyConfig `json:"http_reproxy"`
 	FtpProxy    []FtpProxyConfig    `json:"ftp_proxy"`
-
-	SsClient *SsClientConfig  `json:"ss_client"`
-	SsServer []SsServerConfig `json:"ss_server"`
+	SsServer    []SsServerConfig    `json:"ss_server"`
+	SsClient    *SsClientConfig     `json:"ss_client"`
 }
 
 //	将配置格式化为json字符串

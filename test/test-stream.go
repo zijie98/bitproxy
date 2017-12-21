@@ -5,13 +5,13 @@ import (
 	"io"
 	"net"
 	"os"
-	proxy "bitproxy/proxy"
-	"bitproxy/proxy/ss"
 	"time"
+
+	proxy "github.com/molisoft/bitproxy/proxy"
 )
 
 func main() {
-	pxy := proxy.NewStreamProxy(ss.TCP_PROTOCOL, 1992, "www.baidu.com", 80, 0)
+	pxy := proxy.NewStreamProxy(proxy.TCP_PROTOCOL, 1992, "www.baidu.com", 80, 0, false)
 	go pxy.Start()
 	time.Sleep(1 * time.Second)
 	fmt.Println("----")
@@ -39,7 +39,6 @@ User-Agent: HHH
 	if n == 512 {
 		//pxy.Stop()
 		fmt.Println("stream test is ok")
-		select {}
 	} else {
 		fmt.Println("stream test is fail")
 		os.Exit(1)

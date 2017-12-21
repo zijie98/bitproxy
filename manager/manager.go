@@ -59,6 +59,10 @@ func (this *Manager) DeleteByPort(port uint) {
 	h.Stop()
 	delete(this.handles, port)
 
+	defer func() {
+		this.SaveToConfig()
+	}()
+
 	if this.Config.SsServer != nil {
 		for i, cfg := range this.Config.SsServer {
 			if cfg.Port == port {
@@ -131,6 +135,10 @@ func (this *Manager) ParseConfig() (err error) {
 }
 
 func (this *Manager) CreateProxy(config interface{}, appendToConfig bool) (handler proxy.ProxyHandler) {
+	defer func() {
+		this.SaveToConfig()
+	}()
+
 	switch config.(type) {
 	case *StreamProxyConfig:
 		handler = NewStreamProxy(config.(*StreamProxyConfig))

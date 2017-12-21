@@ -136,7 +136,9 @@ func (this *Manager) ParseConfig() (err error) {
 
 func (this *Manager) CreateProxy(config interface{}, appendToConfig bool) (handler proxy.ProxyHandler) {
 	defer func() {
-		this.SaveToConfig()
+		if appendToConfig {
+			this.SaveToConfig()
+		}
 	}()
 
 	switch config.(type) {

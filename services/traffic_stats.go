@@ -29,7 +29,7 @@ func DeleteTrafficStats(port uint) {
 	deleteTrafficStats <- &Stats{Port: port}
 }
 
-func GetTraffic(port uint) (int64, error) {
+func GetTraffic(port uint) (uint64, error) {
 	return getTraffic(port)
 }
 
@@ -76,7 +76,7 @@ func persistent() {
 	conn.Send("SAVE")
 }
 
-func getTraffic(port uint) (int64, error) {
+func getTraffic(port uint) (uint64, error) {
 	conn, err := getRedisConn()
 	if err != nil {
 		return 0, err
@@ -86,7 +86,7 @@ func getTraffic(port uint) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return redis.Int64(reply, err)
+	return redis.Uint64(reply, err)
 }
 
 func statsToRedis(s *Stats) error {

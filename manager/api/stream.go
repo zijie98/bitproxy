@@ -13,7 +13,7 @@ func CreateStream(ctx *gin.Context) {
 	var config manager.StreamProxyConfig
 	err := ctx.BindJSON(&config)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "bind json error " + err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": "bind json error " + err.Error()})
 		return
 	}
 	removeStream(&config)
@@ -24,7 +24,7 @@ func CreateStream(ctx *gin.Context) {
 	}()
 	select {
 	case err = <-e:
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "create stream error " + err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": "create stream error " + err.Error()})
 		return
 	case <-time.After(2 * time.Second):
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
@@ -36,7 +36,7 @@ func ActionStream(ctx *gin.Context) {
 	var config manager.StreamProxyConfig
 	err := ctx.BindJSON(&config)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "bind json error " + err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": "bind json error " + err.Error()})
 		return
 	}
 	switch ctx.Param("action") {
@@ -59,7 +59,7 @@ func ActionStream(ctx *gin.Context) {
 		err = errors.New("not found action")
 	}
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 	}

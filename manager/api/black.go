@@ -16,7 +16,7 @@ func CreateBlack(ctx *gin.Context) {
 	var ips BlackPost
 	err := ctx.BindJSON(&ips)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "bind json error " + err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": "bind json error " + err.Error()})
 		return
 	}
 	for _, ip := range ips.Ips {
@@ -29,7 +29,7 @@ func ActionBlack(ctx *gin.Context) {
 	var ips BlackPost
 	err := ctx.BindJSON(&ips)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "bind json error " + err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": "bind json error " + err.Error()})
 		return
 	}
 
@@ -44,7 +44,7 @@ func ActionBlack(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 	}

@@ -13,7 +13,7 @@ func CreateSsServer(ctx *gin.Context) {
 	server_config := new(manager.SsServerConfig)
 	err := ctx.BindJSON(server_config)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": err.Error()})
 		return
 	}
 	removeSs(server_config)
@@ -25,7 +25,7 @@ func CreateSsServer(ctx *gin.Context) {
 	select {
 	case err = <-e:
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			ctx.JSON(http.StatusOK, gin.H{"message": err.Error()})
 		}
 		return
 	case <-time.After(2 * time.Second):
@@ -38,7 +38,7 @@ func ActionSsServer(ctx *gin.Context) {
 	var serverConfig manager.SsServerConfig
 	err := ctx.BindJSON(&serverConfig)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusOK, gin.H{"message": err.Error()})
 		return
 	}
 	switch ctx.Param("action") {

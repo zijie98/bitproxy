@@ -120,8 +120,8 @@ func (this *SSServer) handle(client net.Conn) {
 			services.AddTrafficStats(this.port, n)
 		}
 	}
-	go utils.Copy(remote, client, limit, nil, nil, nil, nil, trafficStats, 600*time.Second)
-	utils.Copy(client, remote, nil, nil, nil, nil, nil, trafficStats, 600*time.Second)
+	go utils.Copy(remote, client, limit, nil, nil, nil, nil, trafficStats, 60*time.Second)
+	utils.Copy(client, remote, nil, nil, nil, nil, nil, trafficStats, 60*time.Second)
 
 	this.clients.RemoveConn(client)
 }

@@ -45,7 +45,7 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 	}()
 	for {
 		if timeout != 0 {
-			SetTimeout(src, timeout)
+			SetReadTimeout(src, timeout)
 		}
 		if beforeReadFunc != nil {
 			beforeReadFunc()
@@ -59,6 +59,7 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 				beforeWriteFunc()
 			}
 			//fmt.Println(string(buf[0:nr]))
+			SetWriteTimeout(dst, timeout)
 			nw, ew := dst.Write(buf[0:nr])
 			if afterWriteFunc != nil {
 				afterWriteFunc(int64(nw), ew)
@@ -86,11 +87,19 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 	return written, err
 }
 
-func SetTimeout(src io.Reader, d time.Duration) {
+func SetReadTimeout(src io.Reader, d time.Duration) {
 	t := time.Now()
 	switch src.(type) {
 	case net.Conn:
 		src.(net.Conn).SetReadDeadline(t.Add(d))
+	}
+}
+
+func SetWriteTimeout(dst io.Writer, d time.Duration) {
+	t := time.Now()
+	switch dst.(type) {
+	case net.Conn:
+		dst.(net.Conn).SetWriteDeadline(t.Add(d))
 	}
 }
 

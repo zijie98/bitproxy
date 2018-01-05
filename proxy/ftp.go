@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/molisoft/bitproxy/utils"
@@ -135,24 +136,30 @@ func (this *FtpProxy) handle(localConn net.Conn) {
 		}
 	}()
 
+	var once sync.Once
 	var readNotify = make(utils.ReadNotify)
 	var done = make(chan bool, 5)
 	var closed = false
 	var commandMark FtpCommandFlag
 
 	finish := func() {
-		closed = true
-		done <- true
+		once.Do(func() {
+			closed = true
+			done <- true
+			close(done)
+		})
 	}
 	notify := func(n int64, err error) {
 		readNotify <- n
 	}
 
 	go func() {
+		defer func() {
+			finish()
+		}()
 		for !closed {
 			select {
 			case <-time.After(60 * 2 * time.Second):
-				finish()
 				return
 			case <-readNotify:
 			}
@@ -172,8 +179,10 @@ func (this *FtpProxy) handle(localConn net.Conn) {
 			if pasvClientConn != nil {
 				pasvClientConn.Close()
 			}
+			finish()
 		}()
 		for !closed {
+			remoteConn.SetReadDeadline(time.Now().Add(60 * time.Second))
 			str, err := remote.ReadBytes('\n')
 			if err != nil {
 				break
@@ -183,7 +192,6 @@ func (this *FtpProxy) handle(localConn net.Conn) {
 			if err != nil && err != errNotMatch {
 				this.log.Info("Parse return error: ", err)
 				if err == errQuit {
-					finish()
 					return
 				}
 				continue
@@ -240,6 +248,9 @@ func (this *FtpProxy) handle(localConn net.Conn) {
 
 	// local -> self -> remote
 	go func() {
+		defer func() {
+			finish()
+		}()
 		local := bufio.NewReader(localConn)
 		for !closed {
 			str, err := local.ReadBytes('\n')

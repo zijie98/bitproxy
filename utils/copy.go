@@ -20,15 +20,15 @@ type BeforeCallBackFunc func()
 type ReadNotify chan int64
 
 func CopyWithBefore(dst io.Writer, src io.Reader, beforeReadFunc BeforeCallBackFunc, beforeWriteFunc BeforeCallBackFunc) (written int64, err error) {
-	return Copy(dst, src, nil, beforeReadFunc, beforeWriteFunc, nil, nil, nil, 0)
+	return Copy(dst, src, nil, beforeReadFunc, beforeWriteFunc, nil, nil, nil, 60*2)
 }
 
 func CopyWithAfter(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, afterWriteFunc AfterCallbackFunc) (written int64, err error) {
-	return Copy(dst, src, nil, nil, nil, afterReadFunc, afterWriteFunc, nil, 0)
+	return Copy(dst, src, nil, nil, nil, afterReadFunc, afterWriteFunc, nil, 60*2)
 }
 
 func CopyWithNone(dst io.Writer, src io.Reader) (written int64, err error) {
-	return Copy(dst, src, nil, nil, nil, nil, nil, nil, 0)
+	return Copy(dst, src, nil, nil, nil, nil, nil, nil, 60*2)
 }
 
 func CopyWithTimeout(dst io.Writer, src io.Reader, afterReadFunc AfterCallbackFunc, timeout time.Duration) (w int64, err error) {

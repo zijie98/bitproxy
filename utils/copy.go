@@ -39,6 +39,9 @@ func Copy(dst io.Writer, src io.Reader, limit *Limit, beforeReadFunc BeforeCallB
 	buf := CopyPool.Get(CopyPoolSize)
 	defer CopyPool.Put(buf)
 	defer func() {
+		if er := recover(); er != nil {
+			err = er.(error)
+		}
 		if exitedFunc != nil {
 			exitedFunc(written, err)
 		}

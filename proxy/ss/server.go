@@ -119,6 +119,9 @@ func (this *SSServer) handle(client net.Conn) {
 		if n > 0 {
 			services.AddTrafficStats(this.port, n)
 		}
+		if e != nil {
+			this.log.Info("traffic stats error ", e)
+		}
 	}
 	go utils.Copy(remote, client, limit, nil, nil, nil, nil, trafficStats, 60*time.Second)
 	utils.Copy(client, remote, nil, nil, nil, nil, nil, trafficStats, 60*time.Second)

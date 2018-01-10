@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"runtime"
 	"strings"
 	"time"
 
@@ -205,7 +206,7 @@ func (this *SSServer) Start() error {
 				continue
 			}
 		} else {
-			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr())
+			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr(), " current goroutine ", runtime.NumGoroutine())
 			this.clients.Add(conn)
 			go this.handle(conn)
 		}

@@ -145,7 +145,6 @@ func (this *FtpProxy) handle(localConn net.Conn) {
 	finish := func() {
 		once.Do(func() {
 			closed = true
-			done <- true
 			close(done)
 		})
 	}
@@ -179,7 +178,6 @@ func (this *FtpProxy) handle(localConn net.Conn) {
 			if pasvClientConn != nil {
 				pasvClientConn.Close()
 			}
-			finish()
 		}()
 		for !closed {
 			remoteConn.SetReadDeadline(time.Now().Add(60 * time.Second))

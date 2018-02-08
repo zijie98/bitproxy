@@ -127,7 +127,7 @@ func (this *SSServer) handle(client net.Conn) {
 	go utils.Copy(remote, client, limit, nil, nil, nil, nil, trafficStats, 60*time.Second)
 	utils.Copy(client, remote, nil, nil, nil, nil, nil, trafficStats, 60*time.Second)
 
-	this.clients.RemoveConn(client)
+	//this.clients.RemoveConn(client)
 }
 
 func (this *SSServer) initListen() (err error) {
@@ -206,8 +206,8 @@ func (this *SSServer) Start() error {
 				continue
 			}
 		} else {
-			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr(), " current goroutine ", runtime.NumGoroutine())
-			this.clients.Add(conn)
+			this.log.Info("Accept address:", conn.(net.Conn).RemoteAddr(), " current goroutines ", runtime.NumGoroutine())
+			//this.clients.Add(conn)
 			go this.handle(conn)
 		}
 	}
